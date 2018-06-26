@@ -1,0 +1,62 @@
+%% Run protocol single trial 
+% has to recieve protocol name as input, and possibly a settings name 
+% RunProtocol('Start', 'protocolName', 'subjectName', ['settingsName']) - Runs
+%    the protocol "protocolName". subjectName is required. settingsName is
+%    optional. All 3 are names as they would appear in the launch manager
+%    (i.e. do not include full path or file extension).
+
+
+function RunProtocol_(varargin)
+global BpodSystem
+
+        if nargin == 1
+            NewLaunchManager;
+        else
+            protocolName = varargin{1};
+            subjectName = varargin{2};
+            if nargin > 3
+                settingsName = varargin{3};
+            else
+                settingsName = 'DefaultSettings';
+            end
+
+ BpodSystem.Path.ProtocolFolder = BpodSystem.SystemSettings.ProtocolFolder;
+            ProtocolPath = fullfile(BpodSystem.Path.ProtocolFolder, protocolName);
+            if ~exist(ProtocolPath)
+                % Look 1 level deeper
+                RootContents = dir(BpodSystem.Path.ProtocolFolder);
+                nItems = length(RootContents);
+                Found = 0;
+                y = 3;
+                while Found == 0 && y <= nItems
+                    if RootContents(y).isdir
+                        ProtocolPath = fullfile(BpodSystem.Path.ProtocolFolder, RootContents(y).name, protocolName);
+                        if exist(ProtocolPath)
+                            Found = 1;
+                        end
+                    end
+                    y = y + 1;
+                end
+            end
+            if ~exist(ProtocolPath)
+                error(['Error: Protocol "' protocolName '" not found.'])
+            end
+            
+            BpodSystem.GUIData.ProtocolName = protocolName;
+            BpodSystem.GUIData.SubjectName = subjectName;
+            BpodSystem.GUIData.SettingsFileName = SettingsFileName;
+            BpodSystem.Path.Settings = SettingsFileName;
+            BpodSystem.Status.CurrentProtocolName = protocolName;
+            BpodSystem.Status.CurrentSubjectName = subjectName;
+            SettingStruct = load(BpodSystem.Path.Settings);
+            F = fieldnames(SettingStruct);
+            FieldName = F{1};
+            BpodSystem.ProtocolSettings = eval(['SettingStruct.' FieldName]);
+            
+            
+            ProtocolRunFile = fullfile(ProtocolPath, [protocolName '.m']);
+            addpath(ProtocolRunFile);
+            run(ProtocolRunFile);
+            
+            
+            

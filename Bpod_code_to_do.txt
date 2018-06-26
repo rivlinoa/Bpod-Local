@@ -1,0 +1,9 @@
+Bpod code to do:
+
+1. change the function that creates settings file from launch manager. it has a probem with how I defined data folder in prepare to protocol. (26.6.18)
+2. parameters GUI during tasks, decide when to init and where to call it for use. 
+
+3. write  a code that fits a protocol to an animal, and can decide on transition between protocols based on performance.
+
+4. write a code that define a state for each trial (i.e. 'premature', 'miss', 'correct' etc.) and created files for performance accordingly. 
+
