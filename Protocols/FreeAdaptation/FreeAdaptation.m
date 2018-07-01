@@ -52,7 +52,6 @@ BpodSystem.Data.TrialTypes = []; % The trial type of each trial completed will b
 %         'StateChangeConditions', {'Port5In', '>back','Port5Out', 'exit', 'Tup', '>back'},...
 %         'OutputActions', {}); 
     
-    
     SendStateMatrix(sma);
     disp ('FreeAdaptation protocol')
     RawEvents = RunStateMatrix;
