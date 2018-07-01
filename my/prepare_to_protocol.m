@@ -33,7 +33,7 @@ switch Opstring
             FileName = [folder_name '.mat'];
             DataFolder = fullfile(BpodSystem.Path.DataFolder,folder_name,'Session Data');                        
             BpodSystem.Path.DataFolder=ExperimentFolder;
-            
+            BpodSystem.Path.CurrentDataFile= fullfile(DataFolder,FileName); 
             % initiate parameters in the Bpood object. 
             BpodSystem.Status.Live = 1;
             BpodSystem.Path.CurrentDataFile = fullfile(DataFolder, FileName);            
