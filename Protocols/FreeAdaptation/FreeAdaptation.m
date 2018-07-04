@@ -53,10 +53,11 @@ BpodSystem.Data.TrialTypes = []; % The trial type of each trial completed will b
 %         'OutputActions', {}); 
     
     SendStateMatrix(sma);
+    disp ('FreeAdaptation protocol')
     RawEvents = RunStateMatrix;
     if ~isempty(fieldnames(RawEvents)) % If trial data was returned
         BpodSystem.Data = add_trial_events_RF(BpodSystem.Data,RawEvents); % Computes trial events from raw data
-        BpodSystem.Data = BpodNotebook('sync', BpodSystem.Data); % Sync with Bpod notebook plugin
+        % BpodSystem.Data = BpodNotebook('sync', BpodSystem.Data); % Sync with Bpod notebook plugin
        
         BpodSystem.Data.TrialTypes = TrialTypes; % Change that line to add the current one at the end.
         

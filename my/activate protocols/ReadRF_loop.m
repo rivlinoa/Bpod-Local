@@ -6,7 +6,7 @@
 
 
 
-RFID=serial('COM8'); 
+RFID=serial('COM4'); 
 fopen(RFID);
 
 
@@ -21,8 +21,8 @@ prepare_to_protocol('Start', animals);
 
 %% The main loop for running the protocol 
 
-%while(1)
-for x= 1:1
+while(1)
+%for x= 1:1
     tag=fscanf(RFID)
     tag=tag(logical(isstrprop(tag,'digit')+isstrprop(tag,'alpha'))); %eliminate white spaces from the RF read
     if (length(tag)==12) %make sure there wasn't an error in the read (check if valid for all tags!)
