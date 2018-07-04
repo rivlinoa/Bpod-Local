@@ -1,23 +1,40 @@
 %{
-PortAdaptation
-Supplies reward for the first nosepoke in the port (5 ul).
+CueAdaptation
+Supplies reward for the first nosepoke in the port (5 ul) when the cue is active .
+No punishment for pokes before or after the cue onset. 
+By default randon delay of 0-1 sec. setting MaxDelay to 0 will result in no
+delay. 
 port 1 is active, port 4 is presence detection.
+
+Cue could be either visula or auditory (default visual). 
 
 %}
 
-function PortAdaptation
+function CueAdaptation
 
 global BpodSystem
 
 %% Define parameters
 S = BpodSystem.ProtocolSettings; % Load settings chosen in run_protocol_single_trial into current workspace as a struct called S
 if isempty(fieldnames(S))  % If settings file was an empty struct, populate struct with default settings
-    S.GUI.RewardAmount = 5; %ul
+    S.GUI.RewardAmount = 5; % ul
+    S.GUI.CueType = 'visual';
+    S.GUI.CueDuration = 7;
+    S.GUI.CueIntensity = 255; % from 1 to 255
+    S.GUI.MaxDelay = 2; % sec 
+    S.GUI.Cueduration = 3; 
 end
 
 %% Define trials
-TrialTypes = 1; %1 just as default value, has no meaning, this is where we implement trial randomization.
-BpodSystem.Data.TrialTypes = []; % The trial type of each trial completed will be added here.
+CueTypes = S.GUI.CueType; 
+switch CueTypes
+    case 'visual'
+        CueAction = {'PWM1', S.GUI.CueIntensity};
+    case 'auditory'
+        CueAction = 1;% deliver sound stimulus.. 
+end 
+Delay = rand() * S.GUI.MaxDelay;
+BpodSystem.Data.CueTypes = []; % The trial type of each trial completed will be added here.
 
 %% Initialize GUI
 % BpodParameterGUI('init', S); % Initialize parameter GUI plugin
@@ -25,17 +42,20 @@ BpodSystem.Data.TrialTypes = []; % The trial type of each trial completed will b
 %% The state matrix
 %S = BpodParameterGUI('sync', S); % Sync parameters with BpodParameterGUI plugin
 R = GetValveTimes(S.GUI.RewardAmount, 1 ); ValveTime = R; % Update reward amounts
-
 sma = NewStateMatrix(); % Assemble state matrix
 sma = SetCondition(sma, 4, 'Port4', 1); % set condition to check presence detection 
 sma = AddState(sma, 'Name', 'WaitForPresence', ...
     'Timer', 4,... %what are the units? seconds?
-    'StateChangeConditions', {'Port4In','WaitForPoke','Condition1', 'WaitForPoke', 'Port4Out','exit', 'Tup', 'exit'},...
+    'StateChangeConditions', {'Port4In','Delay','Condition1', 'Delay', 'Port4Out','exit', 'Tup', 'exit'},...
     'OutputActions', {});
-sma = AddState(sma, 'Name', 'WaitForPoke', ...
-    'Timer', 0,...
-    'StateChangeConditions', {'Port1In', 'Reward', 'Port4Out','exit'},...
+sma = AddState(sma, 'Name', 'Delay', ...
+    'Timer', Delay,...
+    'StateChangeConditions', {'Tup', 'CueOn', 'Port4Out','exit'},...
     'OutputActions', {});
+sma = AddState(sma, 'Name', 'CueOn', ...
+    'Timer', S.GUI.CueDuration,...
+    'StateChangeConditions', {'Port1In', 'Reward','Tup', 'WaitForExit', 'Port4Out','exit'},...
+    'OutputActions', CueAction );
 sma = AddState(sma, 'Name', 'Reward', ...
     'Timer', ValveTime,...
     'StateChangeConditions', {'Tup', 'Drinking', 'Port4Out','exit'},...
@@ -44,6 +64,11 @@ sma = AddState(sma, 'Name', 'Drinking', ...
     'Timer', 0,...
     'StateChangeConditions', {'Port4Out','exit'},...
     'OutputActions', {});
+sma = AddState(sma, 'Name', 'WaitForExit', ...
+    'Timer', 0,...
+    'StateChangeConditions', {'Port4Out','exit'},...
+    'OutputActions', {});
+
 
 
 SendStateMatrix(sma);
@@ -55,7 +80,7 @@ if ~isempty(fieldnames(RawEvents)) % If trial data was returned
     
     trial_number=BpodSystem.Data.nTrials;
     % save trial type into data (important whene randomizing...):
-    BpodSystem.Data.TrialTypes(trial_number) = TrialTypes;
+    BpodSystem.Data.CueTypes{trial_number} = CueTypes;
     
     %update the visit count graph
     visit_plot(BpodSystem.GUIHandles.visit_count, 'update',BpodSystem.GUIData.SubjectName)
