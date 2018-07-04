@@ -76,5 +76,6 @@ TE.TrialEndTimestamp(TrialNum) = RawTrialEvents.TrialEndTimestamp;
 TE.RawData.StateMachineErrorCodes{TrialNum} = RawTrialEvents.ErrorCodes;
 TE.SettingsFile{TrialNum} = BpodSystem.Path.Settings;
 TE.RFID{TrialNum}=BpodSystem.GUIData.SubjectName; 
-TE.ProtocolName{TrialNum}=BpodSystem.GUIData.ProtocolName;  
+TE.ProtocolName{TrialNum}=BpodSystem.GUIData.ProtocolName;
+
 newTE = TE;

@@ -17,14 +17,14 @@ tag=fscanf(RFID)
 tag=tag(logical(isstrprop(tag,'digit')+isstrprop(tag,'alpha'))); %erase non digit/letter figures from tag
 
 %% User should manually insert animal name and tag to its structure. Add more animals as needed. 
-animal1.tags={'xxxxxx'};
-animal1.names=1;
+animal1.tags={'00782B199CD6'};
+animal1.names=6;
 
-animal2.tags={'yyyyyy'};
-animal2.names=2;
+animal2.tags={'00782B19C389'};
+animal2.names=5;
 
-animal3.tags={'zzzzzz'};
-animal3.names=3;
+animal3.tags={'00782B17E1A5'};
+animal3.names=7;
 
 %% insert all animals to the table
 % add more rows if needed!
@@ -36,9 +36,10 @@ animals=[animals;struct2table(animal3)];
 disp(animals) %check to validate its correct
 
 %% Save animals table in Bpod_local/Data
-cd(C:/Users/owner/Documents/Bpod Local/Data);
+
 formatOut = 'mm_dd_yy';
 file_name=['animals_',datestr(now,formatOut)];
+file_name= fullfile('Data/', file_name)
 save(file_name,'animals')
 
 %%

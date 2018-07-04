@@ -13,9 +13,9 @@ fopen(RFID);
 %% Define the experiment to run:
 Bpod()
 
-experiment='FreeAdaptation'; %can be replaced by a fitting function
-
-prepare_to_protocol('Start')
+experiment='PortAdaptation'; %can be replaced by a fitting function
+load('C:\Users\owner\Documents\Bpod Local\Data\animals_06_27_18.mat');
+prepare_to_protocol('Start', animals);
 
 %TrialStatePlot(AxesHandle, 'init')
 
