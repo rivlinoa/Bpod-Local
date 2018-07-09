@@ -19,12 +19,17 @@ S = BpodSystem.ProtocolSettings; % Load settings chosen in run_protocol_single_t
 if isempty(fieldnames(S))  % If settings file was an empty struct, populate struct with default settings
     S.GUI.RewardAmount = 5; % ul
     S.GUI.CueType = 'visual';
-    S.GUI.CueDuration = 7;
+    S.GUI.CueDuration = 3;
     S.GUI.CueIntensity = 255; % from 1 to 255
     S.GUI.MaxDelay = 2; % sec 
-    S.GUI.Cueduration = 3; 
+    
 end
 
+if ~isfield(BpodSystem.GUIData,'ParameterGUI')
+    BpodParameterGUI('init', S);
+end 
+
+BpodParameterGUI('sync', S);
 %% Define trials
 CueTypes = S.GUI.CueType; 
 switch CueTypes

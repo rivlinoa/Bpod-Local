@@ -58,9 +58,8 @@ global BpodSystem
             BpodSystem.Status.CurrentProtocolName = protocolName;
             BpodSystem.Status.CurrentSubjectName = subjectName;
             SettingStruct = load(BpodSystem.Path.Settings);
-            F = fieldnames(SettingStruct);
-            FieldName = F{1};
-            BpodSystem.ProtocolSettings = eval(['SettingStruct.' FieldName]);
+            BpodSystem.ProtocolSettings = SettingStruct;
+            %BpodSystem.ProtocolSettings = eval(['SettingStruct.' FieldName]);
             
             
             ProtocolRunFile = fullfile(ProtocolPath, [protocolName '.m']);
