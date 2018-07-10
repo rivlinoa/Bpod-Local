@@ -26,11 +26,13 @@ switch Action
         %BpodSystem.ProtocolFigures.reward_supplied_plot=figure('Name', 'Total water delivered');
         if ~(isfield(BpodSystem.GUIData, 'animals'))
             error (['User must insert the animals of the current experiment to the Bpod object ' ...
-                ' \n Using Prepare-to-protocol function or manually']);
+                ' \n Using prepare-to-protocol function or manually']);
         end
         axes(AxesHandle)
         BpodSystem.GUIHandles.reward_supplied_bar = bar(categorical(BpodSystem.GUIData.animals.animals_names),...
-            BpodSystem.GUIData.animals.reward_supplied);
+            BpodSystem.GUIData.animals.reward_supplied, 0.6);
+        xlabel('Mouce name')
+        ylabel('Reward delivered \mul')
         hold(AxesHandle, 'on');
         
         

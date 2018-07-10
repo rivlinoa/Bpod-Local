@@ -27,7 +27,7 @@ else
     
 end
 TheTime = now;
-TE.Info.SessionStartTime_UTC{TrialNum} = datestr(TheTime, 13);
+TE.Info.SessionStartTime_UTC{TrialNum} = datestr(TheTime);
 TE.Info.SessionStartTime_MATLAB{TrialNum} = TheTime;
 TE.nTrials = TrialNum;
 %% Parse and add raw events for this trial

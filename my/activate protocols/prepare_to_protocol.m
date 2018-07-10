@@ -23,7 +23,8 @@ switch Opstring
         BpodSystem.Data=struct;
         % Make standard folders for this experiment.  This will fail silently if the folders exist
         % define where to save the data from this experiment.
-        folder_name= strrep(char(datetime('now')), ':', '_');
+        formatOut = 'yy.mm.dd_HH.MM.SS';
+        folder_name = datestr(now,formatOut);
         ExperimentFolder= fullfile(BpodSystem.Path.DataFolder,folder_name);
         if ~exist(ExperimentFolder)
             mkdir(ExperimentFolder);

@@ -29,13 +29,13 @@ switch Action
         end
         axes(AxesHandle)
         BpodSystem.GUIHandles.visit_count_bar = bar(categorical(BpodSystem.GUIData.animals.animals_names),...
-            BpodSystem.GUIData.animals.visit_count);
+            BpodSystem.GUIData.animals.visit_count,  0.6);
+        xlabel('Mouce name')
+        ylabel('Visit count')
         hold(AxesHandle, 'on');
+         
         
-        
-        
-        
-        
+               
     case 'update'
         
         %update GUI data for the visit count (add the
@@ -46,3 +46,6 @@ switch Action
       
 end
 end
+
+
+%bar(y,'stacked')

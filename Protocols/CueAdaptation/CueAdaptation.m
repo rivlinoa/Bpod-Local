@@ -1,12 +1,12 @@
 %{
 CueAdaptation
 Supplies reward for the first nosepoke in the port (5 ul) when the cue is active .
-No punishment for pokes before or after the cue onset. 
+No punishment for pokes before or after the cue onset.
 By default randon delay of 0-1 sec. setting MaxDelay to 0 will result in no
-delay. 
+delay.
 port 1 is active, port 4 is presence detection.
 
-Cue could be either visula or auditory (default visual). 
+Cue could be either visula or auditory (default visual).
 
 %}
 
@@ -21,26 +21,30 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.CueType = 'visual';
     S.GUI.CueDuration = 3;
     S.GUI.CueIntensity = 255; % from 1 to 255
-    S.GUI.MaxDelay = 2; % sec 
+    S.GUI.MaxDelay = 2; % sec
+    S.GUI.Delay = ' ';
     
 end
 
 if ~isfield(BpodSystem.GUIData,'ParameterGUI')
     BpodParameterGUI('init', S);
-end 
+end
 
-BpodParameterGUI('sync', S);
+
 %% Define trials
-CueTypes = S.GUI.CueType; 
+CueTypes = S.GUI.CueType;
 switch CueTypes
     case 'visual'
         CueAction = {'PWM1', S.GUI.CueIntensity};
     case 'auditory'
-        CueAction = 1;% deliver sound stimulus.. 
-end 
+        CueAction = 1;% deliver sound stimulus..
+end
 Delay = rand() * S.GUI.MaxDelay;
-BpodSystem.Data.CueTypes = []; % The trial type of each trial completed will be added here.
-BpodSystem.Data.Delay = []; % The Delay time  of each trial completed will be added here.
+%% Sync parameters GUI after randomization of delay time. :)
+
+S.GUI.Delay = Delay;
+BpodParameterGUI('sync', S);
+
 %% Initialize GUI
 % BpodParameterGUI('init', S); % Initialize parameter GUI plugin
 
@@ -48,7 +52,7 @@ BpodSystem.Data.Delay = []; % The Delay time  of each trial completed will be ad
 %S = BpodParameterGUI('sync', S); % Sync parameters with BpodParameterGUI plugin
 R = GetValveTimes(S.GUI.RewardAmount, 1 ); ValveTime = R; % Update reward amounts
 sma = NewStateMatrix(); % Assemble state matrix
-sma = SetCondition(sma, 1, 'Port4', 1); % a condition where port 4 is in 
+sma = SetCondition(sma, 1, 'Port4', 1); % a condition where port 4 is in
 sma = SetCondition(sma, 2, 'Port4', 0); % a condition where port 4 is our
 sma = AddState(sma, 'Name', 'WaitForPresence', ...
     'Timer', 4,... %what are the units? seconds?
@@ -82,21 +86,34 @@ RawEvents = RunStateMatrix;
 
 if ~isempty(fieldnames(RawEvents)) % If trial data was returned
     BpodSystem.Data = add_trial_events_RF(BpodSystem.Data,RawEvents); % Computes trial events from raw data
-    %BpodSystem.Data = BpodNotebook('sync', BpodSystem.Data); % Sync with Bpod notebook plugin
+    % BpodSystem.Data = BpodNotebook('sync', BpodSystem.Data); % Sync with Bpod notebook plugin
     
     trial_number=BpodSystem.Data.nTrials;
     % save trial type into data (important whene randomizing...):
     BpodSystem.Data.CueTypes{trial_number} = CueTypes;
     BpodSystem.Data.Delay{trial_number} = Delay;
-    %update the visit count graph
-    visit_plot(BpodSystem.GUIHandles.visit_count, 'update',BpodSystem.GUIData.SubjectName)
     
-    %Check if the trial reached state 'drinking' and save reward
-    %amount given:
+    % update the visit count graph
+    % If the figure was closed, first initiate it and then update it:
+    if isvalid(BpodSystem.GUIHandles.visit_count)
+        visit_plot(BpodSystem.GUIHandles.visit_count, 'update',BpodSystem.GUIData.SubjectName)
+    else
+        visit_plot(BpodSystem.GUIHandles.visit_count, 'init')
+        visit_plot(BpodSystem.GUIHandles.visit_count, 'update',BpodSystem.GUIData.SubjectName)
+    end
+    
+    % Check if the trial reached state 'drinking' and save reward
+    % amount given:
     % update reward delivered graph:
     if ~isnan(BpodSystem.Data.RawEvents.Trial{1,  trial_number}.States.Drinking(1,1))
         BpodSystem.Data.reward_supplied(trial_number)=S.GUI.RewardAmount;
-        reward_supplied_plot(BpodSystem.GUIHandles.reward_supplied,'update', BpodSystem.GUIData.SubjectName, BpodSystem.Data.reward_supplied(trial_number))
+        % If the figure was closed, first initiate it and then update it:
+        if isvalid(BpodSystem.GUIHandles.reward_supplied)
+            reward_supplied_plot(BpodSystem.GUIHandles.reward_supplied,'update', BpodSystem.GUIData.SubjectName, BpodSystem.Data.reward_supplied(trial_number))
+        else
+            reward_supplied_plot(BpodSystem.GUIHandles.reward_supplied, 'init')
+            reward_supplied_plot(BpodSystem.GUIHandles.reward_supplied,'update', BpodSystem.GUIData.SubjectName, BpodSystem.Data.reward_supplied(trial_number))
+        end
     end
     
     
