@@ -13,7 +13,7 @@ global BpodSystem
         else
             protocolName = varargin{1};
             subjectName = varargin{2};
-            if nargin > 3
+            if nargin > 2
                 settingsName = varargin{3};
             else
                 settingsName = 'DefaultSettings';
