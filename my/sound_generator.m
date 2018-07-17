@@ -17,10 +17,10 @@ env=[on_ramp steady_state off_ramp];
 
 %Create sound
 omega=2*pi*Frequency;
-tt = [0:1:n_trial] * dt;
+tt = [0:1:(n_trial-1)] * dt;
 sig1=sin(omega*tt);
 %plot(sig)
-sig1=sig1.*env; % this is the signal with the envelope
+sig1=sig1.*env(1:size(sig1,2)); % this is the signal with the envelope
 sig1=[sig1 zeros(1,(Trlength-Stlength)*SamplingRate)];
 
 seq1=[];
@@ -31,5 +31,5 @@ end
 mm1=max(abs(seq1));%wavwrite clips any signal =>1; mm is used to normalize the signal
 seq1=seq1/mm1*0.999;
 
-SineWave=seq1
+SineWave=seq1;
 end 
