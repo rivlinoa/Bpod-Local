@@ -39,7 +39,7 @@ CueTypes = S.GUI.CueType;
 switch CueTypes
     case 'visual'
         CueAction = {'PWM1', S.GUI.CueIntensity};
-        
+        WaitAction={};
     case 'auditory'
         if (isfield(BpodSystem.ModuleUSB, 'AudioPlayer1'))
             AudioPlayerUSB = BpodSystem.ModuleUSB.AudioPlayer1;
@@ -51,7 +51,7 @@ switch CueTypes
         A = BpodAudioPlayer(AudioPlayerUSB);
         SF = A.Info.maxSamplingRate; % Use max supported sampling rate
         Sound = sound_generator(SF, S.GUI.SinWaveFreq, S.GUI.SoundDuration); % Sampling freq (hz), Sine frequency (hz), duration (s)
-                
+        
         % Program sound server
         A.SamplingRate = SF;
         A.BpodEvents = 'On';
@@ -65,9 +65,16 @@ switch CueTypes
         if isempty(analogPortIndex)
             error('Error: Bpod AudioPlayer module not found. If you just plugged it in, please restart Bpod.')
         end
-        LoadSerialMessages('AudioPlayer1', {['P' 0], ['P' 1], ['P' 2], ['P' 3]});
+        %load the module with instruction, 1=play#0, 2=play#1 ....
+        LoadSerialMessages('AudioPlayer1', {['P' 0]});
         
         CueAction = {'AudioPlayer1', 1};% deliver sound stimulus..
+        WaitAction = {'AudioPlayer1','*'};
+        
+        % Remember values of left and right frequencies & durations, so a new one only gets uploaded if it was changed
+        LastFrequency = S.GUI.SinWaveFreq;
+        LastSoundDuration = S.GUI.SoundDuration;
+        
         
 end
 
@@ -84,11 +91,11 @@ S.GUI.Delay = Delay;
 R = GetValveTimes(S.GUI.RewardAmount, 1 ); ValveTime = R; % Update reward amounts
 sma = NewStateMatrix(); % Assemble state matrix
 sma = SetCondition(sma, 1, 'Port4', 1); % a condition where port 4 is in
-sma = SetCondition(sma, 2, 'Port4', 0); % a condition where port 4 is our
+sma = SetCondition(sma, 2, 'Port4', 0); % a condition where port 4 is out
 sma = AddState(sma, 'Name', 'WaitForPresence', ...
     'Timer', 4,... %what are the units? seconds?
     'StateChangeConditions', {'Port4In','Delay','Condition1', 'Delay', 'Port4Out','exit', 'Tup', 'exit'},...
-    'OutputActions', {});
+    'OutputActions', WaitAction);
 sma = AddState(sma, 'Name', 'Delay', ...
     'Timer', Delay,...
     'StateChangeConditions', {'Port1In','WaitForExit', 'Tup', 'CueOn', 'Condition2','exit'},...
