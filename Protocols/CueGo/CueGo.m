@@ -20,16 +20,15 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.RewardAmount = 5; % ul
     S.GUI.CueType = 'visual';
     S.GUI.CueDuration = 3;
+    S.GUI.ResponseDuration = 3;
     S.GUI.CueIntensity = 255; % from 1 to 255
     S.GUI.MaxDelay = 2; % sec
     S.GUI.Delay = ' ';
     
 end
 
-if S.GUI.Cuetype=='auditory'
-    S.GUI.SoundDuration = 0.5; % Duration of sound (s)
-    S.GUI.SinWaveFreq = 2000; % Frequency of right cue
-end
+
+
 if ~isfield(BpodSystem.GUIData,'ParameterGUI')
     BpodParameterGUI('init', S);
 end
@@ -40,8 +39,13 @@ CueTypes = S.GUI.CueType;
 switch CueTypes
     case 'visual'
         CueAction = {'PWM1', S.GUI.CueIntensity};
-    
+        
     case 'auditory'
+        if (isfield(BpodSystem.ModuleUSB, 'AudioPlayer1'))
+            AudioPlayerUSB = BpodSystem.ModuleUSB.AudioPlayer1;
+        else
+            error('Error: To run this protocol, you must first pair the AudioPlayer1 module with its USB port. Click the USB config button on the Bpod console.')
+        end
         
         % Create an instance of the audioPlayer module
         A = BpodAudioPlayer(AudioPlayerUSB);
@@ -70,7 +74,7 @@ end
 %% Sync parameters GUI after randomization of delay time. :)
 Delay = rand() * S.GUI.MaxDelay;
 S.GUI.Delay = Delay;
-BpodParameterGUI('sync', S);
+% BpodParameterGUI('sync', S); %some bug... fix!!!
 
 %% Initialize GUI
 % BpodParameterGUI('init', S); % Initialize parameter GUI plugin

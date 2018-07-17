@@ -1,7 +1,7 @@
 %% This file is used for running a protocol with RF tag reader on Bpod.
-%User should enter protocol name in the appropriate place. 
+% User should enter protocol name in the appropriate place. 
 
-%Created by Noa 26.6.18
+% Created by Noa 26.6.18
 
 
 
@@ -32,7 +32,7 @@ while(1)
     if (length(tag)==12) %make sure there wasn't an error in the read (check if valid for all tags!)
         fclose(RFID);
         disp(tag)
-        run_protocol_single_trial(experiment, tag, 'delay5') % possible to add , ['settingsName']
+        run_protocol_single_trial(experiment, tag, 'Au_4kh_delay1') % possible to add , ['settingsName']
         fopen(RFID);
     end
     

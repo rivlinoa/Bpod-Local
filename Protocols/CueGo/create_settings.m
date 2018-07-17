@@ -5,7 +5,7 @@ Settings=struct;
 
 Settings.GUI.RewardAmount = 10; % ul
 Settings.GUI.CueType = 'auditory'; % visual / auditory
-Settings.GUI.CueDuration = 3; % sec 
+Settings.GUI.CueDuration = 3; % sec ** if we want different cue and response duration add state. 
 Settings.GUI.CueIntensity = 255; % from 1 to 255
 Settings.GUI.MaxDelay = 1; % sec
 Settings.GUI.Delay = ' '; % just for display, don't fill a value. 
