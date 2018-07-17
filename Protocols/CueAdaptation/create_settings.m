@@ -10,7 +10,7 @@ Settings.CueIntensity = 255; % from 1 to 255
 Settings.MaxDelay = 2; % sec
 
 %% User should insert a name to describe the settings, in ' ' , and .mat suffix 
-settings_name='default.mat';
+settings_name='delay5.mat';
 
 %% Save the settings 
 file_name=fullfile('C:\Users\owner\Documents\Bpod Local\Protocols\CueAdaptation\Settings\', settings_name)

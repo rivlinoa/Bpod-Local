@@ -20,11 +20,14 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.RewardAmount = 5; % ul
     S.GUI.CueType = 'visual';
     S.GUI.CueDuration = 3;
+    S.GUI.ResponseDuration = 3;
     S.GUI.CueIntensity = 255; % from 1 to 255
     S.GUI.MaxDelay = 2; % sec
     S.GUI.Delay = ' ';
     
 end
+
+
 
 if ~isfield(BpodSystem.GUIData,'ParameterGUI')
     BpodParameterGUI('init', S);
@@ -36,14 +39,50 @@ CueTypes = S.GUI.CueType;
 switch CueTypes
     case 'visual'
         CueAction = {'PWM1', S.GUI.CueIntensity};
+        
     case 'auditory'
-        CueAction = 1;% deliver sound stimulus..
+        if (isfield(BpodSystem.ModuleUSB, 'AudioPlayer1'))
+            AudioPlayerUSB = BpodSystem.ModuleUSB.AudioPlayer1;
+        else
+            error('Error: To run this protocol, you must first pair the AudioPlayer1 module with its USB port. Click the USB config button on the Bpod console.')
+        end
+        
+        % Create an instance of the audioPlayer module
+        A = BpodAudioPlayer(AudioPlayerUSB);
+        SF = A.Info.maxSamplingRate; % Use max supported sampling rate
+        Sound = GenerateSineWave(SF, S.GUI.SinWaveFreq, S.GUI.SoundDuration)*.9; % Sampling freq (hz), Sine frequency (hz), duration (s)
+        % PunishSound = (rand(1,SF*.5)*2) - 1;
+        % Generate early withdrawal sound
+        W1 = GenerateSineWave(SF, 1000, .5); W2 = GenerateSineWave(SF, 1200, .5); EarlyWithdrawalSound = W1+W2;
+        P = SF/100; Interval = P;
+        for x = 1:50 % Gate waveform to create pulses
+            EarlyWithdrawalSound(P:P+Interval) = 0;
+            P = P+(Interval*2);
+        end
+        % Program sound server
+        A.SamplingRate = SF;
+        A.BpodEvents = 'On';
+        A.TriggerMode = 'Master';
+        A.loadSound(1, Sound);
+        A.loadSound(2, EarlyWithdrawalSound);
+        Envelope = 0.005:0.005:1; % Define envelope of amplitude coefficients, to play at sound onset + offset
+        A.AMenvelope = Envelope;
+        
+        % Set Bpod serial message library with correct codes to trigger sounds 1-4 on analog output channels 1-2
+        analogPortIndex = find(strcmp(BpodSystem.Modules.Name, 'AudioPlayer1'));
+        if isempty(analogPortIndex)
+            error('Error: Bpod AudioPlayer module not found. If you just plugged it in, please restart Bpod.')
+        end
+        LoadSerialMessages('AudioPlayer1', {['P' 0], ['P' 1], ['P' 2], ['P' 3]});
+        
+        CueAction = {'AudioPlayer1', 1};% deliver sound stimulus..
+        
 end
-Delay = rand() * S.GUI.MaxDelay;
-%% Sync parameters GUI after randomization of delay time. :)
 
+%% Sync parameters GUI after randomization of delay time. :)
+Delay = rand() * S.GUI.MaxDelay;
 S.GUI.Delay = Delay;
-BpodParameterGUI('sync', S);
+% BpodParameterGUI('sync', S); %some bug... fix!!!
 
 %% Initialize GUI
 % BpodParameterGUI('init', S); % Initialize parameter GUI plugin
@@ -122,6 +161,8 @@ if ~isempty(fieldnames(RawEvents)) % If trial data was returned
     SessionData = BpodSystem.Data;
     save(BpodSystem.Path.CurrentDataFile, 'SessionData', '-v6');
 end
+
+
 HandlePauseCondition; % Checks to see if the protocol is paused. If so, waits until user resumes.
 if BpodSystem.Status.BeingUsed == 0
     return
