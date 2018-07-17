@@ -16,7 +16,7 @@ Bpod()
 
 %% Define the experiment to run, initiate data folder and graphes. 
 % Load the animals data file - which mice are participating in the experiment, and their tags. 
-experiment='CueAdaptation'; %can be replaced by a fitting function
+experiment='CueGo'; %can be replaced by a fitting function
 load('C:\Users\owner\Documents\Bpod Local\Data\animals_06_27_18.mat');
 prepare_to_protocol('Start', animals);
 
@@ -32,7 +32,7 @@ while(1)
     if (length(tag)==12) %make sure there wasn't an error in the read (check if valid for all tags!)
         fclose(RFID);
         disp(tag)
-        run_protocol_single_trial(experiment, tag) % possible to add , ['settingsName']
+        run_protocol_single_trial(experiment, tag, 'delay5') % possible to add , ['settingsName']
         fopen(RFID);
     end
     
