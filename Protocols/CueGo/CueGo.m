@@ -46,21 +46,13 @@ switch CueTypes
         % Create an instance of the audioPlayer module
         A = BpodAudioPlayer(AudioPlayerUSB);
         SF = A.Info.maxSamplingRate; % Use max supported sampling rate
-        Sound = GenerateSineWave(SF, S.GUI.SinWaveFreq, S.GUI.SoundDuration)*.9; % Sampling freq (hz), Sine frequency (hz), duration (s)
-        % PunishSound = (rand(1,SF*.5)*2) - 1;
-        % Generate early withdrawal sound
-        W1 = GenerateSineWave(SF, 1000, .5); W2 = GenerateSineWave(SF, 1200, .5); EarlyWithdrawalSound = W1+W2;
-        P = SF/100; Interval = P;
-        for x = 1:50 % Gate waveform to create pulses
-            EarlyWithdrawalSound(P:P+Interval) = 0;
-            P = P+(Interval*2);
-        end
+        Sound = sound_generator(SF, S.GUI.SinWaveFreq, S.GUI.SoundDuration); % Sampling freq (hz), Sine frequency (hz), duration (s)
+                
         % Program sound server
         A.SamplingRate = SF;
         A.BpodEvents = 'On';
         A.TriggerMode = 'Master';
         A.loadSound(1, Sound);
-        A.loadSound(2, EarlyWithdrawalSound);
         Envelope = 0.005:0.005:1; % Define envelope of amplitude coefficients, to play at sound onset + offset
         A.AMenvelope = Envelope;
         
@@ -71,7 +63,7 @@ switch CueTypes
         end
         LoadSerialMessages('AudioPlayer1', {['P' 0], ['P' 1], ['P' 2], ['P' 3]});
         
-        CueAction = {'AudioPlayer1', 2};% deliver sound stimulus..
+        CueAction = {'AudioPlayer1', 1};% deliver sound stimulus..
         
 end
 
