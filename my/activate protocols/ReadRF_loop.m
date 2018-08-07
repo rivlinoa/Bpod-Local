@@ -8,7 +8,7 @@
 %% create the RFID object and open it, if it was open - reset and reopen again. 
 instrreset
 clear
-RFID=serial('COM8'); 
+RFID=serial('COM4'); 
 fopen(RFID);
 
 %% open the Bpod object+GUI: 
@@ -16,8 +16,8 @@ Bpod()
 
 %% Define the experiment to run, initiate data folder and graphes. 
 % Load the animals data file - which mice are participating in the experiment, and their tags. 
-experiment='CueGo'; %can be replaced by a fitting function
-load('C:\Users\owner\Documents\Bpod Local\Data\animals_06_27_18.mat');
+experiment='FreeAdaptationCue'; %can be replaced by a fitting function
+load('C:\Users\Owner\Documents\Bpod Local\Data\animals_23_07_18.mat')
 prepare_to_protocol('Start', animals);
 
 
@@ -27,12 +27,13 @@ prepare_to_protocol('Start', animals);
 
 while(1)
 
+    
     tag=fscanf(RFID)
     tag=tag(logical(isstrprop(tag,'digit')+isstrprop(tag,'alpha'))); %eliminate white spaces from the RF read
     if (length(tag)==12) %make sure there wasn't an error in the read (check if valid for all tags!)
         fclose(RFID);
         disp(tag)
-        run_protocol_single_trial(experiment, tag, 'Au_4kh_delay1') % possible to add , ['settingsName']
+        run_protocol_single_trial(experiment, tag) % possible to add , ['settingsName']
         fopen(RFID);
     end
     

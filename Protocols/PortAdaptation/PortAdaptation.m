@@ -27,7 +27,8 @@ BpodSystem.Data.TrialTypes = []; % The trial type of each trial completed will b
 R = GetValveTimes(S.GUI.RewardAmount, 1 ); ValveTime = R; % Update reward amounts
 
 sma = NewStateMatrix(); % Assemble state matrix
-sma = SetCondition(sma, 4, 'Port4', 1); % set condition to check presence detection 
+sma = SetCondition(sma, 1, 'Port4', 1); % a condition where port 4 is in 
+sma = SetCondition(sma, 2, 'Port4', 0); % a condition where port 4 is our
 sma = AddState(sma, 'Name', 'WaitForPresence', ...
     'Timer', 4,... %what are the units? seconds?
     'StateChangeConditions', {'Port4In','WaitForPoke','Condition1', 'WaitForPoke', 'Port4Out','exit', 'Tup', 'exit'},...

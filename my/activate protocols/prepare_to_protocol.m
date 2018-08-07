@@ -53,6 +53,7 @@ switch Opstring
         BpodSystem.GUIData.animals.reward_supplied=zeros(size(BpodSystem.GUIData.animals.animals_names));
         BpodSystem.GUIData.animals.visit_count=zeros(size(BpodSystem.GUIData.animals.animals_names));
         
+        BpodSystem.GUIData.LastFrequency=0;
         
         %% initialize plots:
         
