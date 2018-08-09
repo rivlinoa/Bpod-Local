@@ -41,40 +41,46 @@ switch CueTypes
         CueAction = {'PWM1', S.GUI.CueIntensity};
         WaitAction={};
     case 'auditory'
-        if (isfield(BpodSystem.ModuleUSB, 'AudioPlayer1'))
-            AudioPlayerUSB = BpodSystem.ModuleUSB.AudioPlayer1;
+        if (isfield(BpodSystem.ModuleUSB, 'WavePlayer1'))
+            WavePlayerUSB = BpodSystem.ModuleUSB.WavePlayer1;
         else
             error('Error: To run this protocol, you must first pair the AudioPlayer1 module with its USB port. Click the USB config button on the Bpod console.')
         end
         
         % Create an instance of the audioPlayer module
-        A = BpodAudioPlayer(AudioPlayerUSB);
-        SF = A.Info.maxSamplingRate; % Use max supported sampling rate
-        Sound = sound_generator(SF, S.GUI.SinWaveFreq, S.GUI.SoundDuration); % Sampling freq (hz), Sine frequency (hz), duration (s)
+        A = BpodWavePlayer(WavePlayerUSB);
+        
         
         % Program sound server
-        A.SamplingRate = SF;
-        A.BpodEvents = 'On';
+        A.SamplingRate = 50000; % max in 4 ch configurationn.
+        A.BpodEvents = {'On','On','On','On'};
         A.TriggerMode = 'Master';
-        A.loadSound(1, Sound);
-        Envelope = 0.005:0.005:1; % Define envelope of amplitude coefficients, to play at sound onset + offset
-        A.AMenvelope = Envelope;
-        
+       
+        SF = A.SamplingRate;
+        Sound = sound_generator(SF, S.GUI.SinWaveFreq, S.GUI.SoundDuration); % Sampling freq (hz), Sine frequency (hz), duration (s)
+              
         % Set Bpod serial message library with correct codes to trigger sounds 1-4 on analog output channels 1-2
-        analogPortIndex = find(strcmp(BpodSystem.Modules.Name, 'AudioPlayer1'));
+        analogPortIndex = find(strcmp(BpodSystem.Modules.Name, 'WavePlayer1'));
         if isempty(analogPortIndex)
-            error('Error: Bpod AudioPlayer module not found. If you just plugged it in, please restart Bpod.')
+            error('Error: Bpod WavePlayer module not found. If you just plugged it in, please restart Bpod.')
         end
-        %load the module with instruction, 1=play#0, 2=play#1 ....
-        LoadSerialMessages('AudioPlayer1', {['P' 0]});
         
-        CueAction = {'AudioPlayer1', 1};% deliver sound stimulus..
-        WaitAction = {'AudioPlayer1','*'};
+        if S.GUI.SinWaveFreq ~= BpodSystem.GUIData.LastFrequency
+            Sound = sound_generator(SF, S.GUI.SinWaveFreq, S.GUI.SoundDuration); % Sampling freq (hz), Sine frequency (hz), duration (s)
+            Sound=Sound+1;
+            %Sound = GenerateSineWave(SF, S.GUI.SinWaveFreq, S.GUI.SoundDuration);
+            A.loadWaveform(1, Sound);
+            BpodSystem.GUIData.LastFrequency = S.GUI.SinWaveFreq;
+            LoadSerialMessages('WavePlayer1', {['P' ,1, 0 ]});
+        end
         
-        % Remember values of left and right frequencies & durations, so a new one only gets uploaded if it was changed
-        LastFrequency = S.GUI.SinWaveFreq;
-        LastSoundDuration = S.GUI.SoundDuration;
+        CueAction = {'WavePlayer1', 1};
+        BpodSystem.GUIData.LastFrequency = S.GUI.SinWaveFreq;
         
+        CueAction = {'WavePlayer1', 1};
+        BpodSystem.GUIData.LastFrequency = S.GUI.SinWaveFreq;
+        
+              
         
 end
 
@@ -95,7 +101,7 @@ sma = SetCondition(sma, 2, 'Port4', 0); % a condition where port 4 is out
 sma = AddState(sma, 'Name', 'WaitForPresence', ...
     'Timer', 1,... %what are the units? seconds?
     'StateChangeConditions', {'Port4In','Delay','Condition1', 'Delay', 'Port4Out','exit', 'Tup', 'exit'},...
-    'OutputActions', WaitAction);
+    'OutputActions', {});
 sma = AddState(sma, 'Name', 'Delay', ...
     'Timer', Delay,...
     'StateChangeConditions', {'Port1In','WaitForExit', 'Tup', 'CueOn', 'Condition2','exit'},...
