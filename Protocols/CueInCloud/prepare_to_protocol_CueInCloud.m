@@ -29,10 +29,11 @@ switch Opstring
             error('Error: To run this protocol, you must first pair the AudioPlayer1 module with its USB port. Click the USB config button on the Bpod console.')
         end
         A = BpodWavePlayer(WavePlayerUSB);
-        SF = A.SamplingRate;
+        global A
         
         % Program sound server
         A.SamplingRate = 50000; % max in 4 ch configurationn.
+        SF = A.SamplingRate;
         A.BpodEvents = {'On','On','On','On'};
         A.TriggerMode = 'Master';
         A.OutputRange = '0V:5V';
@@ -44,16 +45,19 @@ switch Opstring
         BpodSystem.GUIData.cue = cue;
         attenuations = linspace(0.1,1,10);
         cuemat = attenuations'*cue;
-        cloudmat = attenuations'*stim;
+        cloudmat = attenuations'*stim.*0.1;
         
         for i=1:10
-            A.loadWaveform(i, cloudmat(i)); % the cloud, for now only one...
-            LoadSerialMessages('WavePlayer1', ['P' ,1, i-1 ], i);
-            A.loadWaveform(10+i, cuemat(i)); % the cue for now only one ....
-            LoadSerialMessages('WavePlayer1', ['P' ,2, 9+i ], 10+i);
+            A.loadWaveform(i, cloudmat(i,:)); % the cloud, for now only one...
+            LoadSerialMessages('WavePlayer1', {['P' ,1, i-1 ]}, i);
+            A.loadWaveform(10+i, cuemat(i,:)); % the cue for now only one ....
+            LoadSerialMessages('WavePlayer1', {['P' ,2, 9+i ]}, 10+i);
         end
+        LoadSerialMessages('WavePlayer1', {['P',2,0],['P',2,1],['P',2,2],['P',2,3]...
+            ,['P',2,4],['P',2,5],['P',2,6],['P',2,7],['P',2,8],['P',2,9],['P',1,10]...
+            ,['P',1,11],['P',1,12],['P',1,13],['P',1,14],['P',1,15],['P',1,16],['P',1,17]...
+            ['P',1,18],['P',1,19],['S']});
         
-        LoadSerialMessages('WavePlayer1', ['S'], 21 );
         %%
         BpodSystem.Data=struct;
         BpodSystem.Data.cloud = stim;

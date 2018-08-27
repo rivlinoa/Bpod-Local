@@ -13,7 +13,7 @@ Cue could be either visula or auditory (default visual).
 function CueInCloud
 
 global BpodSystem
-
+global A
 %% Define parameters
 S = BpodSystem.ProtocolSettings; % Load settings chosen in run_protocol_single_trial into current workspace as a struct called S
 if isempty(fieldnames(S))  % If settings file was an empty struct, populate struct with default settings
@@ -22,6 +22,7 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.MaxDelay = 2; % sec
     S.GUI.MinDelay = 0.5; % sec
     S.GUI.Delay = ' ';
+    S.GUI.CueType = 'auditory';%  'auditory'  /  'auditory_visual'
     
 end
 
@@ -32,9 +33,14 @@ end
 %% Define trials
 attencue = ceil(rand*10)+10;
 attencloud = ceil(rand*10);
-
 CloudAction = {'WavePlayer1', attencloud}; % deliver sound stimulus..
-CueAction = {'WavePlayer1', attencloud}; % deliver sound stimulus..
+CueAction = {'WavePlayer1', attencue}; % deliver sound stimulus..
+
+if strcmp(S.GUI.CueType, 'auditory_visual')
+    CloudAction = {'WavePlayer1', attencloud,'PWM1', 255}; % deliver sound stimulus..
+    CueAction = {'WavePlayer1', attencue,'PWM1', 255}; % deliver sound stimulus..
+end 
+
 StopAction = {'WavePlayer1', 21};
 
 Delay = S.GUI.MinDelay + rand()*(S.GUI.MaxDelay-S.GUI.MinDelay);
@@ -86,6 +92,7 @@ if ~isempty(fieldnames(RawEvents)) % If trial data was returned
     BpodSystem.Data.Delay{trial_number} = Delay;
     BpodSystem.Data.attencue{trial_number} = attencue;
     BpodSystem.Data.attencloud{trial_number} = attencloud;
+    BpodSystem.Data.Cuetype{trial_number} = S.GUI.CueType;
     % update the visit count graph
     % If the figure was closed, first initiate it and then update it:
     if isvalid(BpodSystem.GUIHandles.visit_count)

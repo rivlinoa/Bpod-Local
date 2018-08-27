@@ -16,9 +16,12 @@ Bpod()
 
 %% Define the experiment to run, initiate data folder and graphes. 
 % Load the animals data file - which mice are participating in the experiment, and their tags. 
-experiment='FreeAdaptationCue'; %can be replaced by a fitting function
+experiment='CueGo'; %can be replaced by a fitting function
 load('C:\Users\Owner\Documents\Bpod Local\Data\animals_23_07_18.mat')
+% prepare_to_protocol_CueInCloud('Start', animals)
+%cd ('C:\Users\Owner\Documents\Bpod Local\Protocols\CueGo')
 prepare_to_protocol('Start', animals);
+
 
 
 %% The main loop for running the protocol 
@@ -30,10 +33,12 @@ while(1)
     
     tag=fscanf(RFID)
     tag=tag(logical(isstrprop(tag,'digit')+isstrprop(tag,'alpha'))); %eliminate white spaces from the RF read
-    if (length(tag)==12) %make sure there wasn't an error in the read (check if valid for all tags!)
+        x=randi(100); %----ADDED 19/08
+     if (length(tag)==12) %make sure there wasn't an error in the read (check if valid for all tags!)
         fclose(RFID);
         disp(tag)
-        run_protocol_single_trial(experiment, tag) % possible to add , ['settingsName']
+        Ind_Settings=change_settings(tag);
+        run_protocol_single_trial(experiment,tag,Ind_Settings) % possible to add , ['settingsName'] without .mat
         fopen(RFID);
     end
     

@@ -1,12 +1,12 @@
-%% Run analysis ver 1 - offline analysis for gocue protocol in Bpod.
+  %% Run analysis ver 1 - offline analysis for gocue protocol in Bpod.
 
 %% A - load data files (as exported from bpod):
 % User should loadd as much data files as needed (all should be from the
 % same cage and experiment. each data file should be loaded to a seperate
 % variable. you can drag the file to the workspace and copy the correct line from the command window.
 
-file1 = load('C:\Users\owner\Documents\Bpod Local\Data\18.08.02_12.47.24\Session Data\18.08.02_12.47.24.mat');
-file2 = load('C:\Users\owner\Documents\Bpod Local\Data\18.08.06_08.41.38\Session Data\18.08.06_08.41.38.mat');
+file1 = load('C:\Users\Owner\Documents\Bpod Local\Data\18.08.23_17.51.45\Session Data\18.08.23_17.51.45.mat');
+% file2 = load('C:\Users\Owner\Documents\Bpod Local\Data\18.08.12_12.46.24\Session Data\18.08.12_12.46.24.mat');
 % file3 = ...
 %% B- load animals file
 load('C:\Users\owner\Documents\Bpod Local\Data\animals_23_07_18.mat');
@@ -15,11 +15,11 @@ load('C:\Users\owner\Documents\Bpod Local\Data\animals_23_07_18.mat');
 % example: T = create_table(SessionData, animals, filename)
 % you can ignore warnings if they appear
 T1 = create_table(file1, animals, 'table1');
-T2 = create_table(file2, animals, 'table2');
+% T2 = create_table(file2, animals, 'table2');
 
 
 %% Connect two tables
-T = [T1; T2];
+T = [T1];
 
 %% create summary table and 2 plots:
 [result_inds, resultID] = findgroups(T.trial_result);
@@ -29,6 +29,7 @@ T.RT = T.reaction_time-cell2mat(T.delay);
 data_set=struct();
 figure_ind=1;
 
+%settings_figure = figure ('Name','Settings plot'); %---ADDED 22/8
 reward_figure = figure('Name', 'Reward plot');
 performance_figure = figure('Name', 'Performance plot');
 histogram_figure = figure('Name', 'Histogram plot');
@@ -73,6 +74,20 @@ for day = unique(T.date)'
     xlabel('Mouce name')
     title(['Day',num2str(day)])
     
+    % ADDED 22/8----------------------------
+    % figure for settings
+    
+    %day_ind=find(day==unique(T.date));
+    
+    %figure(settings_figure)
+    %hold on
+    %subplot(1, length(unique(T.date)),  day_ind,(SessionData.(['settings',num2str(day)]).SettingsFile), settings_ind);
+    %bar(categorical(data_set.(['day',num2str(day)]).animalsID),  data_set.(['day',num2str(day)]).reward) 
+    %bar(categorial(data_set.(['SettingsFile',num2str(settings)]).SettingsFile))
+    %xlabel('settings') 
+    %ylabel('Reward supplied /ul')
+    %title (['Day',num2str(day)])
+    %---------------------------------------
     %Histogram
     for animal_ind = animalsID(animalsID>0)'
         

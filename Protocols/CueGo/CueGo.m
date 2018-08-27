@@ -23,11 +23,10 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.ResponseDuration = 3;
     S.GUI.CueIntensity = 255; % from 1 to 255
     S.GUI.MaxDelay = 2; % sec
+    S.GUI.MinDelay = 0.5; % sec %ADDED 12/08/18
     S.GUI.Delay = ' ';
     
 end
-
-
 
 if ~isfield(BpodSystem.GUIData,'ParameterGUI')
     BpodParameterGUI('init', S);
@@ -36,56 +35,58 @@ end
 
 %% Define trials
 CueTypes = S.GUI.CueType;
-switch CueTypes
-    case 'visual'
-        CueAction = {'PWM1', S.GUI.CueIntensity};
-        WaitAction={};
-    case 'auditory'
-        if (isfield(BpodSystem.ModuleUSB, 'WavePlayer1'))
-            WavePlayerUSB = BpodSystem.ModuleUSB.WavePlayer1;
-        else
-            error('Error: To run this protocol, you must first pair the AudioPlayer1 module with its USB port. Click the USB config button on the Bpod console.')
-        end
-        
-        % Create an instance of the audioPlayer module
-        A = BpodWavePlayer(WavePlayerUSB);
-        
-        
-        % Program sound server
-        A.SamplingRate = 50000; % max in 4 ch configurationn.
-        A.BpodEvents = {'On','On','On','On'};
-        A.TriggerMode = 'Master';
-       
-        SF = A.SamplingRate;
+if strcmp(CueTypes ,'visual')
+    CueAction = {'PWM1', S.GUI.CueIntensity};
+    WaitAction={};
+else
+    if (isfield(BpodSystem.ModuleUSB, 'WavePlayer1'))
+        WavePlayerUSB = BpodSystem.ModuleUSB.WavePlayer1;
+    else
+        error('Error: To run this protocol, you must first pair the AudioPlayer1 module with its USB port. Click the USB config button on the Bpod console.')
+    end
+    
+    % Create an instance of the audioPlayer module
+    A = BpodWavePlayer(WavePlayerUSB);
+    
+    
+    % Program sound server
+    A.SamplingRate = 50000; % max in 4 ch configurationn.
+    A.BpodEvents = {'On','On','On','On'};
+    A.TriggerMode = 'Master';
+    
+    SF = A.SamplingRate;
+    Sound = sound_generator(SF, S.GUI.SinWaveFreq, S.GUI.SoundDuration); % Sampling freq (hz), Sine frequency (hz), duration (s)
+    
+    % Set Bpod serial message library with correct codes to trigger sounds 1-4 on analog output channels 1-2
+    analogPortIndex = find(strcmp(BpodSystem.Modules.Name, 'WavePlayer1'));
+    if isempty(analogPortIndex)
+        error('Error: Bpod WavePlayer module not found. If you just plugged it in, please restart Bpod.')
+    end
+    
+    if S.GUI.SinWaveFreq ~= BpodSystem.GUIData.LastFrequency
         Sound = sound_generator(SF, S.GUI.SinWaveFreq, S.GUI.SoundDuration); % Sampling freq (hz), Sine frequency (hz), duration (s)
-              
-        % Set Bpod serial message library with correct codes to trigger sounds 1-4 on analog output channels 1-2
-        analogPortIndex = find(strcmp(BpodSystem.Modules.Name, 'WavePlayer1'));
-        if isempty(analogPortIndex)
-            error('Error: Bpod WavePlayer module not found. If you just plugged it in, please restart Bpod.')
-        end
-        
-        if S.GUI.SinWaveFreq ~= BpodSystem.GUIData.LastFrequency
-            Sound = sound_generator(SF, S.GUI.SinWaveFreq, S.GUI.SoundDuration); % Sampling freq (hz), Sine frequency (hz), duration (s)
-            Sound=Sound+1;
-            %Sound = GenerateSineWave(SF, S.GUI.SinWaveFreq, S.GUI.SoundDuration);
-            A.loadWaveform(1, Sound);
-            BpodSystem.GUIData.LastFrequency = S.GUI.SinWaveFreq;
-            LoadSerialMessages('WavePlayer1', {['P' ,1, 0 ]});
-        end
-        
-        CueAction = {'WavePlayer1', 1};
+        Sound=Sound+1;
+        %Sound = GenerateSineWave(SF, S.GUI.SinWaveFreq, S.GUI.SoundDuration);
+        A.loadWaveform(1, Sound);
         BpodSystem.GUIData.LastFrequency = S.GUI.SinWaveFreq;
-        
+        LoadSerialMessages('WavePlayer1', {['P' ,1, 0 ]});
+    end
+    BpodSystem.GUIData.LastFrequency = S.GUI.SinWaveFreq;
+    CueAction = {};
+    if strcmp(CueTypes ,'auditory')
         CueAction = {'WavePlayer1', 1};
-        BpodSystem.GUIData.LastFrequency = S.GUI.SinWaveFreq;
-        
-              
-        
+    end
+    
+    if strcmp(CueTypes ,'auditory_visual')
+        CueAction = {'WavePlayer1', 1,'PWM1', S.GUI.CueIntensity};
+    end
+    
+    
+    
 end
 
 %% Sync parameters GUI after randomization of delay time. :)
-Delay = rand() * S.GUI.MaxDelay;
+Delay = S.GUI.MinDelay + rand()*(S.GUI.MaxDelay-S.GUI.MinDelay);
 S.GUI.Delay = Delay;
 % BpodParameterGUI('sync', S); %some bug... fix!!!
 
@@ -122,8 +123,6 @@ sma = AddState(sma, 'Name', 'WaitForExit', ...
     'Timer', 0,...
     'StateChangeConditions', {'Condition2','exit'},...
     'OutputActions', {});
-
-
 
 SendStateMatrix(sma);
 RawEvents = RunStateMatrix;
@@ -166,7 +165,6 @@ if ~isempty(fieldnames(RawEvents)) % If trial data was returned
     SessionData = BpodSystem.Data;
     save(BpodSystem.Path.CurrentDataFile, 'SessionData', '-v6');
 end
-
 
 HandlePauseCondition; % Checks to see if the protocol is paused. If so, waits until user resumes.
 if BpodSystem.Status.BeingUsed == 0
