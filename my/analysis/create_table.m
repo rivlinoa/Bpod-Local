@@ -36,6 +36,12 @@ T.cue_type = SessionData.CueTypes';
 T.reward_supplied = zeros(SessionData.nTrials,1); % If last trial was not rewarded, rewared supplied length is shorter.
 T.reward_supplied(1:size(SessionData.reward_supplied,2)) = SessionData.reward_supplied';
 T.delay=SessionData.Delay';
+if isfield(SessionData, 'attencloud')
+    T.attencloud = SessionData.attencloud';
+    iscloud = T.attencloud > 0;
+    T.cue_type = cellfun(@(x)strcat({x},'Cloud'), T.cue_type);
+    
+end 
 
 T.trial_time=SessionData.Info.SessionStartTime_UTC';
 T.trial_time=datetime(T.trial_time);
@@ -81,7 +87,7 @@ T.RT = T.reaction_time - cell2mat(T.delay);
 T.trial_result=cell(SessionData.nTrials,1);
 for i=1:SessionData.nTrials
     % first inintiaite as empty just in case of a bug. 
-    T.trial_result(i)={[]};
+    T.trial_result(i)={' '};
     % if cue wasnt presented mark as premature (later will change some to
     % be omitted)
     if isnan(SessionData.RawEvents.Trial{1, i}.States.CueOn(1,1))
