@@ -34,8 +34,7 @@ if ~isfield(BpodSystem.GUIData,'ParameterGUI')
 end
 
 %% Define trials
-
-%decide what is the cue type based on light probability
+%decide what is the cue type based on light probability for no cloud condition 
 if rand(1) <= S.GUI.LightProb
     CueAction = {'WavePlayer1', 11,'PWM1', 255 }; % deliver cue stimulus + led on.
     Cuetype = 'AudVis';
@@ -43,24 +42,28 @@ else
     CueAction = {'WavePlayer1', 11};% deliver cue stimulus on channel 1
     Cuetype = 'Aud';
 end
-
-
-% set the cloud attenuation (1-10) base on difficulty probability
-attencloud = 1;
-if rand(1) <= S.GUI.DifficultyProb
-    attencloud = randi(2);
-else
-    attencloud = randi(10);
-end 
+attencloud = 0; %no cloud
+CloudAction = {};
 
 % decide if to have a cloud at all based on cloud probability
 if rand(1) <= S.GUI.CloudProb
+    % set the cloud attenuation (1-10) base on difficulty probability
+    attencloud = 1;
+    if rand(1) <= S.GUI.DifficultyProb
+        attencloud = randi(2);
+    else
+        attencloud = randi(10);
+    end 
     CloudAction = {'WavePlayer1', attencloud}; % deliver sound stimulus..
-    CueAction = {'WavePlayer1', 11,'PWM1', 255 }; % deliver cue stimulus + led on.
-    Cuetype = 'AudVis';
-else 
-    CloudAction = {};
-    attencloud = 0; % corresponds to no cloud
+    
+    if rand(1) <= S.GUI.LightCloudProb
+        CueAction = {'WavePlayer1', 11,'PWM1', 255 }; % deliver cue stimulus + led on.
+        Cuetype = 'AudVisCloud';
+    else
+        CueAction = {'WavePlayer1', 11 }; % deliver cue stimulus + led on.
+        Cuetype = 'AudCloud';
+    end
+
 end 
 
 
@@ -115,6 +118,7 @@ end
     BpodSystem.Data.Delay{trial_number} = Delay;
     BpodSystem.Data.attencloud{trial_number} = attencloud;
     BpodSystem.Data.CueTypes{trial_number} = Cuetype;
+    BpodSystem.Data.ResponseDuration(trial_number) = S.GUI.ResponseDuration;
     
     % update the visit count graph
     % If the figure was closed, first initiate it and then update it:

@@ -36,11 +36,10 @@ T.cue_type = SessionData.CueTypes';
 T.reward_supplied = zeros(SessionData.nTrials,1); % If last trial was not rewarded, rewared supplied length is shorter.
 T.reward_supplied(1:size(SessionData.reward_supplied,2)) = SessionData.reward_supplied';
 T.delay=SessionData.Delay';
+
 if isfield(SessionData, 'attencloud')
     T.attencloud = SessionData.attencloud';
-    iscloud = T.attencloud > 0;
-    T.cue_type = cellfun(@(x)strcat({x},'Cloud'), T.cue_type);
-    
+         
 end 
 
 T.trial_time=SessionData.Info.SessionStartTime_UTC';
@@ -50,17 +49,11 @@ T.date=str2num(T.date);
 
 %% Import settings - change!!!
 
-%first load first setting file to find out what was the cue duration. if it
-%varies between subjects, change this section.
-% ** a potentioal bug in calling settings name and fields. **
-% load(SessionData.SettingsFile{1, 1});
-% cue_duration=0;
-% if isempty(fieldnames(Settings)) 
-%     cue_duration = 3; % !!!! change for different protocol or if protocol is changed
-% else
-%     cue_duration = Settings.GUI.CueDuration;
-% end
-cue_duration = 3;
+if isfield(SeesionData, 'ResponseDuration')
+    T.response_duration = SessionData.ResponseDuration';
+else
+    T.response_duration = 1*ones(SessionData.nTrials,1);
+end 
 
 %% Add reaction time +  visit duration
 T.reaction_time = NaN(SessionData.nTrials,1);
@@ -104,7 +97,7 @@ for i=1:SessionData.nTrials
     end
     % other cases are late...
     if (isfield(SessionData.RawEvents.Trial{1, i}.Events, 'Port1In'))&&...
-            (T.reaction_time(i)>(T.delay{i}+cue_duration))
+            (T.reaction_time(i)>(T.delay{i}+response_duration))
         T.trial_result(i)={'late'};
     end
     
