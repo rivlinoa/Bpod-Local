@@ -38,7 +38,7 @@ T.reward_supplied(1:size(SessionData.reward_supplied,2)) = SessionData.reward_su
 T.delay=SessionData.Delay';
 
 if isfield(SessionData, 'attencloud')
-    T.attencloud = SessionData.attencloud';
+    T.attencloud = cell2mat(SessionData.attencloud)';
          
 end 
 
