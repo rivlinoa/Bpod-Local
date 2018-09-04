@@ -24,7 +24,8 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.MaxDelay = 2; % sec
     S.GUI.MinDelay = 0.5; % sec
     S.GUI.LightProb = 1; % Between 0-1, fraction of trials that would have auditory+visual stimulus.  
-    S.GUI.CloudProb = 1; % Between 0-1, fraction of trials that would have tone cloud during delay .  
+    S.GUI.CloudProb = 1; % Between 0-1, fraction of trials that would have tone cloud during delay . 
+    S.GUI.LightCloudProb = 1; % prob of light in cloud trials
     S.GUI.DifficultyProb = 1;% Between 0-1, the proportion of easy trials (bottom 2 attenuations). 
 end
 
@@ -33,6 +34,17 @@ if ~isfield(BpodSystem.GUIData,'ParameterGUI')
 end
 
 %% Define trials
+
+%decide what is the cue type based on light probability
+if rand(1) <= S.GUI.LightProb
+    CueAction = {'WavePlayer1', 11,'PWM1', 255 }; % deliver cue stimulus + led on.
+    Cuetype = 'AudVis';
+else 
+    CueAction = {'WavePlayer1', 11};% deliver cue stimulus on channel 1
+    Cuetype = 'Aud';
+end
+
+
 % set the cloud attenuation (1-10) base on difficulty probability
 attencloud = 1;
 if rand(1) <= S.GUI.DifficultyProb
@@ -44,19 +56,14 @@ end
 % decide if to have a cloud at all based on cloud probability
 if rand(1) <= S.GUI.CloudProb
     CloudAction = {'WavePlayer1', attencloud}; % deliver sound stimulus..
+    CueAction = {'WavePlayer1', 11,'PWM1', 255 }; % deliver cue stimulus + led on.
+    Cuetype = 'AudVis';
 else 
     CloudAction = {};
     attencloud = 0; % corresponds to no cloud
 end 
 
-%decide what is the cue type based on light probability
-if rand(1) <= S.GUI.LightProb
-    CueAction = {'WavePlayer1', 11,'PWM1', 255 }; % deliver cue stimulus + led on.
-    Cuetype = 'AudVis';
-else 
-    CueAction = {'WavePlayer1', 11};% deliver cue stimulus on channel 1
-    Cuetype = 'Aud';
-end
+
 
 StopAction = {'WavePlayer1', 12};
 
@@ -102,12 +109,12 @@ RawEvents = RunStateMatrix;
 if ~isempty(fieldnames(RawEvents)) % If trial data was returned
     BpodSystem.Data = add_trial_events_RF(BpodSystem.Data,RawEvents); % Computes trial events from raw data
     % BpodSystem.Data = BpodNotebook('sync', BpodSystem.Data); % Sync with Bpod notebook plugin
-    
+end
     trial_number = BpodSystem.Data.nTrials;
     % save trial type into data (important whene randomizing...):
     BpodSystem.Data.Delay{trial_number} = Delay;
     BpodSystem.Data.attencloud{trial_number} = attencloud;
-    BpodSystem.Data.Cuetype{trial_number} = Cuetype;
+    BpodSystem.Data.CueTypes{trial_number} = Cuetype;
     
     % update the visit count graph
     % If the figure was closed, first initiate it and then update it:
