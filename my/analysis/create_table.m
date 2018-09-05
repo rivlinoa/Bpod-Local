@@ -49,7 +49,7 @@ T.date=str2num(T.date);
 
 %% Import settings - change!!!
 
-if isfield(SeesionData, 'ResponseDuration')
+if isfield(SessionData, 'ResponseDuration')
     T.response_duration = SessionData.ResponseDuration';
 else
     T.response_duration = 1*ones(SessionData.nTrials,1);
@@ -97,7 +97,7 @@ for i=1:SessionData.nTrials
     end
     % other cases are late...
     if (isfield(SessionData.RawEvents.Trial{1, i}.Events, 'Port1In'))&&...
-            (T.reaction_time(i)>(T.delay{i}+response_duration))
+            (T.reaction_time(i)>(T.delay{i}+T.response_duration(i)))
         T.trial_result(i)={'late'};
     end
     
