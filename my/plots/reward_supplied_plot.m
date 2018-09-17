@@ -31,7 +31,7 @@ switch Action
         axes(AxesHandle)
         BpodSystem.GUIHandles.reward_supplied_bar = bar(categorical(BpodSystem.GUIData.animals.animals_names),...
             BpodSystem.GUIData.animals.reward_supplied, 0.6);
-        xlabel('Mouce name')
+        xlabel('Mouse name')
         ylabel('Reward delivered \mul')
         hold(AxesHandle, 'on');
         

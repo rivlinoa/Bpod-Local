@@ -30,7 +30,7 @@ switch Action
         axes(AxesHandle)
         BpodSystem.GUIHandles.visit_count_bar = bar(categorical(BpodSystem.GUIData.animals.animals_names),...
             BpodSystem.GUIData.animals.visit_count,  0.6);
-        xlabel('Mouce name')
+        xlabel('Mouse name')
         ylabel('Visit count')
         hold(AxesHandle, 'on');
          
