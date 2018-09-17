@@ -26,7 +26,7 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.LightProb = 0.5; % Between 0-1, fraction of trials that would have auditory+visual stimulus.  
     S.GUI.LightSoundProb = 0.5; % prob of light + sound  trials, make sure 2 numbers add to less than 1!!!
     S.GUI.LightIntensity = 255; % from 1 to 255
-    S.GUI.SinWaveFreq = 12000; %Hz
+    S.GUI.SinWaveFreq = 6000; %Hz
     S.GUI.SoundDuration = 1; %sec 
 end
 
@@ -43,7 +43,7 @@ if (isfield(BpodSystem.ModuleUSB, 'WavePlayer1'))
 end
 
 A = BpodWavePlayer(WavePlayerUSB);
-A.SamplingRate = 50000; % max in 4 ch configurationn.
+A.SamplingRate = 49900; % max in 4 ch configurationn.
 A.BpodEvents = {'On','On','On','On'};
 A.TriggerMode = 'Master';
 SF = A.SamplingRate;
@@ -61,6 +61,7 @@ end
         % generate sweeps sounds for entry = will / will not be a cue. 
         t = [0:(1/SF):0.5];
         IsCue =  wgn(1,length(t),1);
+        IsCue = IsCue / max(IsCue);
         NoCue =  chirp(t, 200, t(end), 5000);
         A.loadWaveform(2, IsCue);
         A.loadWaveform(3, NoCue);
@@ -81,11 +82,11 @@ if rand(1) <= S.GUI.CueProb % if its a cued trial
     %define cue type
     define_cue = rand(1);
     if define_cue <= S.GUI.LightProb % only visual
-        CueAction = {'PWM1', S.GUI.CueIntensity};
+        CueAction = {'PWM1', S.GUI.LightIntensity};
         Cuetype = 'Vis';
         CueState = 'CueOn'; 
     elseif define_cue <= (S.GUI.LightProb + S.GUI.LightSoundProb) % visual + auditory
-        CueAction = {'WavePlayer1',1,'PWM1', S.GUI.CueIntensity};
+        CueAction = {'WavePlayer1',1,'PWM1', S.GUI.LightIntensity};
         Cuetype ='AudVis';
         CueState = 'CueOn'; 
     else
@@ -118,7 +119,7 @@ sma = AddState(sma, 'Name', 'WaitForPresence', ...
 sma = AddState(sma, 'Name', 'EntrySignal', ...
     'Timer', 0.5,... %the length of the entry sound 
     'StateChangeConditions', {'Tup','Delay','Condition2','exit'},...
-    'OutputActions', {});
+    'OutputActions', EntryAction);
 sma = AddState(sma, 'Name', 'Delay', ...
     'Timer', Delay,...
     'StateChangeConditions', {'Port1In','WaitForExit', 'Tup', CueState, 'Condition2','exit'},...
@@ -147,7 +148,7 @@ if ~isempty(fieldnames(RawEvents)) % If trial data was returned
     BpodSystem.Data = add_trial_events_RF(BpodSystem.Data,RawEvents); % Computes trial events from raw data
     trial_number=BpodSystem.Data.nTrials;
     % save trial type into data (important whene randomizing...):
-    BpodSystem.Data.CueTypes{trial_number} = CueTypes;
+    BpodSystem.Data.CueTypes{trial_number} = Cuetype;
     BpodSystem.Data.Delay{trial_number} = Delay;
     % update the visit count graph
     % If the figure was closed, first initiate it and then update it:
