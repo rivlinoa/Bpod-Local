@@ -91,6 +91,10 @@ for i=1:SessionData.nTrials
     if ~isfield(SessionData.RawEvents.Trial{1, i}.Events, 'Port1In')
         T.trial_result(i)={'omitted'};
     end
+    % If there is no presence mark as 'no presence'. 
+    if ~isfield(SessionData.RawEvents.Trial{1, i}.Events, 'Condition1')
+        T.trial_result(i)={'no_presence'};
+    end
     % if there was a reward state mark as correct
     if ~isnan(SessionData.RawEvents.Trial{1, i}.States.Reward(1,1))
         T.trial_result(i)={'correct'};
