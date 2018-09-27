@@ -164,6 +164,8 @@ if ~isempty(fieldnames(RawEvents)) % If trial data was returned
     % update reward delivered graph:
     if ~isnan(BpodSystem.Data.RawEvents.Trial{1,  trial_number}.States.Drinking(1,1))
         BpodSystem.Data.reward_supplied(trial_number)=S.GUI.RewardAmount;
+        BpodSystem.Data.ResponseDuration(trial_number)=S.GUI.ResponseDuration;
+        BpodSystem.Data.settings{trial_number}=S;
         % If the figure was closed, first initiate it and then update it:
         if isvalid(BpodSystem.GUIHandles.reward_supplied)
             reward_supplied_plot(BpodSystem.GUIHandles.reward_supplied,'update', BpodSystem.GUIData.SubjectName, BpodSystem.Data.reward_supplied(trial_number))

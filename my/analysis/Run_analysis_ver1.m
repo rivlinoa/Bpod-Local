@@ -5,22 +5,22 @@
 % same cage and experiment. each data file should be loaded to a seperate
 % variable. you can drag the file to the workspace and copy the correct line from the command window.
 
-file1 = load('C:\Users\owner\Documents\Bpod Local\Data\18.08.23_17.51.45\Session Data\18.08.23_17.51.45.mat');
-%file2 = load('C:\Users\owner\Documents\Bpod Local\Data\18.08.06_08.41.38\Session Data\18.08.06_08.41.38.mat');
+file1 = load('C:\Users\owner\Documents\Bpod Local\Data\18.09.20_09.52.05\Session Data\18.09.20_09.52.05.mat');
+file2 = load('C:\Users\owner\Documents\Bpod Local\Data\18.09.20_22.27.19\Session Data\18.09.20_22.27.19.mat');
 % file3 = ...
 %% B- load animals file
-load('C:\Users\owner\Documents\Bpod Local\Data\animals_23_07_18.mat');
+load('C:\Users\owner\Documents\Bpod Local\Data\animals_09_06_18.mat')
 
 %% C - Cretae a table for each of the files, you should specify the file name to save each of them.
 % example: T = create_table(SessionData, animals, filename)
 % you can ignore warnings if they appear
 T1 = create_table(file1, animals, 'table1');
-% T2 = create_table(file2, animals, 'table2');
+T2 = create_table(file2, animals, 'table2');
 
 
 %% Connect two tables
-%T = [T1; T2];
-T = T1;
+T = [T1; T2];
+%T = T1;
 %% create summary table and 2 plots:
 T.RT = T.reaction_time - cell2mat(T.delay);
 
@@ -252,7 +252,7 @@ for current_animal = unique(IDanimal)'
     no_presence_H(subplot_ind) = subplot(1,length(unique(IDanimal)),subplot_ind);
     hold on
     no_presence_data = visits_3(IDanimal == current_animal,:);
-    bar(categorical(unique(success_data.IDday)), no_presence_data)
+    bar(categorical(IDday(IDanimal == current_animal)), no_presence_data)
     subplot_ind = subplot_ind+1;
     xlabel ('Day')
     title( ['Mouse ', num2str(current_animal)])

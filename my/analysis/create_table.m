@@ -52,7 +52,7 @@ T.date=str2num(T.date);
 if isfield(SessionData, 'ResponseDuration')
     T.response_duration = SessionData.ResponseDuration';
 else
-    T.response_duration = 1*ones(SessionData.nTrials,1);
+    T.response_duration = 3*ones(SessionData.nTrials,1);
 end 
 
 %% Add reaction time +  visit duration
