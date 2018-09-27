@@ -33,10 +33,17 @@ F.rt_figure = figure('Name', 'Reaction time plot');
 F.cue_type_figure = figure('Name', 'Cue type plot');
 F.RT_delay_figure = figure('Name', 'RT vs. delay');
 F.presence_omission_figure = figure('Name', 'Presence to omission');
-
-for day = unique(T.date)'
-    data_inds = (T.date==day);
-    T_day = T(data_inds,:);
+if ismember('attencloud', T.Properties.VariableNames)
+    F.success_attenuation_figure = figure('Name', 'Success attenuation plot');
+end 
+    
+    
+    
+presence_inds = ~(strcmp(T.trial_result,'no_presence'));
+T_presence = T(presence_inds,:);
+for day = unique(T_presence.date)'
+    data_inds = (T_presence.date==day);
+    T_day = T_presence(data_inds,:);
     [animals_inds, animalsID] = findgroups (T_day.names);
     
     sum_reward_supplies = splitapply(@sum,T_day.reward_supplied,animals_inds);
@@ -52,8 +59,9 @@ for day = unique(T.date)'
     late = splitapply((@(r) sum(strcmp(r,'late'))),T_day.trial_result, animals_inds);
     
     data_set.(['day',num2str(day)]).results_table = table(animalsID ,correct,omitted,premature,late);
+   
     % figure for licks
-    day_ind=find(day==unique(T.date));
+    day_ind = find(day==unique(T_presence.date));
     
     figure(F.reward_figure)
     hold on
@@ -67,7 +75,7 @@ for day = unique(T.date)'
     
     figure(F.performance_figure)
     hold on
-    visit_H(day_ind) = subplot(1, length(unique(T.date)),  day_ind);
+    visit_H(day_ind) = subplot(1, length(unique(T_presence.date)),  day_ind);
     ytoplot = table2array([data_set.(['day',num2str(day)]).results_table(:,2:end);]);
     bar(categorical(data_set.(['day',num2str(day)]).animalsID), ytoplot, 'stacked');
     ylabel('Visits count')
@@ -101,8 +109,8 @@ for day = unique(T.date)'
         
         %% plot RT relative to cue onset histogram
         figure(F.rt_figure)
-        subplot_value = ((animal_i-1)*length(unique(T.date)))+day_ind;
-        RT_H(subplot_value) = subplot(sum(animalsID>0), length(unique(T.date)),  subplot_value);
+        subplot_value = ((animal_i-1)*length(unique(T_presence.date)))+day_ind;
+        RT_H(subplot_value) = subplot(sum(animalsID>0), length(unique(T_presence.date)),  subplot_value);
         hold on
         histogram( T_animal.RT,'BinWidth',0.05)
         xlabel('Reaction time relative to cue onset')
@@ -112,7 +120,7 @@ for day = unique(T.date)'
         
         %% plot presence to omission  histogram
         figure(F.presence_omission_figure)
-        presence_H(subplot_value) = subplot(sum(animalsID>0), length(unique(T.date)),  subplot_value);
+        presence_H(subplot_value) = subplot(sum(animalsID>0), length(unique(T_presence.date)),  subplot_value);
         hold on
         omission_inds = strcmp(T_animal.trial_result, 'omitted');
         histogram( T_animal.visit_duration(omission_inds),'BinWidth',0.1)
@@ -131,8 +139,8 @@ for day = unique(T.date)'
         
         
         figure(F.cue_type_figure)
-        subplot_value = ((animal_i-1)*length(unique(T.date)))+day_ind;
-        cue_H(subplot_value) = subplot(sum(animalsID>0), length(unique(T.date)),  subplot_value);
+        subplot_value = ((animal_i-1)*length(unique(T_presence.date)))+day_ind;
+        cue_H(subplot_value) = subplot(sum(animalsID>0), length(unique(T_presence.date)),  subplot_value);
         hold on
         ytoplot = [correct,omitted,premature,late];
         if length(categorical(cueID))<2
@@ -152,7 +160,7 @@ for day = unique(T.date)'
         
         % plot RT vs. delay
         figure(F.RT_delay_figure)
-        RT_delay_H(subplot_value) = subplot(sum(animalsID>0), length(unique(T.date)),  subplot_value);
+        RT_delay_H(subplot_value) = subplot(sum(animalsID>0), length(unique(T_presence.date)),  subplot_value);
         hold on
         for cue=unique(T_animal.cue_type)'
             relevant_inds = strcmp(T_animal.cue_type, cue);
@@ -164,6 +172,26 @@ for day = unique(T.date)'
         ylim ([-3,3])
         title(['Day ',num2str(day), ' mouse ' , num2str(animal_ind)])
         legend(unique(T_animal.cue_type))
+        
+        % plot sucess rate by attenuation for cue in cloud protocol:
+        
+        if ismember('attencloud', T_animal.Properties.VariableNames) 
+            figure(F.success_attenuation_figure)
+           [atten_groups, IDatten] = findgroups (T_animal.attencloud);
+           
+           %subplot_value = ((animal_i-1)*length(unique(T_presence.date)))+day_ind;
+            visits_atten = splitapply (@length, T_animal.RFID, atten_groups);
+            success_atten =  splitapply((@(r) sum(strcmp(r,'correct'))),T_animal.trial_result, atten_groups);
+            success_atten = success_atten./visits_atten;
+            atten_H(subplot_value) = subplot(sum(animalsID>0), length(unique(T_presence.date)),  subplot_value);
+            hold on
+            disp( subplot_value)
+            plot (IDatten,success_atten) 
+            xlabel('cloud attenuation (1-10)')
+            ylabel ('Success rate')
+            ylim ([0,1])
+            title(['Day ',num2str(day), ' mouse ' , num2str(animal_ind)])
+        end
     end
     
     
@@ -185,11 +213,11 @@ control_axes(reward_H)
 control_axes(visit_H)
 control_axes(presence_H)
 
-%% success rate line figure
+%% success rate line figure - per day & cue type
 %there is some redundancy in the code but its the easyiest way :(
-[group_inds, IDanimal,IDcue,IDday ] = findgroups (T.names,T.cue_type, T.date );
-visits_2 = splitapply (@length, T.RFID, group_inds);
-success =  splitapply((@(r) sum(strcmp(r,'correct'))),T.trial_result, group_inds);
+[group_inds, IDanimal,IDcue,IDday ] = findgroups (T_presence.names,T_presence.cue_type, T_presence.date );
+visits_2 = splitapply (@length, T_presence.RFID, group_inds);
+success =  splitapply((@(r) sum(strcmp(r,'correct'))),T_presence.trial_result, group_inds);
 success = success./visits_2;
 success_table = table(success ,IDanimal , IDcue , IDday);
 
@@ -210,7 +238,28 @@ for current_animal = unique(IDanimal)'
     ylabel('Success rate')
     ylim ([0 1])
     legend(unique(success_data.IDcue))
+    
 end
+%% figure no presence 
+T_no_presence = T(~presence_inds,:);
+[group_inds, IDanimal, IDday ] = findgroups (T_no_presence.names,T_no_presence.date);
+visits_3 = splitapply (@length, T_no_presence.RFID, group_inds);
+
+F.no_presence_figure = figure('Name', 'No presence plot');
+subplot_ind = 1;
+figure(F.no_presence_figure)
+for current_animal = unique(IDanimal)'
+    no_presence_H(subplot_ind) = subplot(1,length(unique(IDanimal)),subplot_ind);
+    hold on
+    no_presence_data = visits_3(IDanimal == current_animal,:);
+    bar(categorical(unique(success_data.IDday)), no_presence_data)
+    subplot_ind = subplot_ind+1;
+    xlabel ('Day')
+    title( ['Mouse ', num2str(current_animal)])
+    ylabel('No presence visits')
+       
+end
+control_axes(no_presence_H)
 
 %% save all figures in a folder.
 % notice the file name of the figure is named after the date of the
