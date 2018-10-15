@@ -50,7 +50,9 @@ T.date=str2num(T.date);
 %% Import settings - change!!!
 
 if isfield(SessionData, 'ResponseDuration')
-    T.response_duration = SessionData.ResponseDuration';
+    T.response_duration = zeros(SessionData.nTrials,1); % If last trial was not rewarded, response duration length is shorter.
+    T.response_duration(1:size(SessionData.ResponseDuration,2)) = SessionData.ResponseDuration';
+    
 else
     T.response_duration = 3*ones(SessionData.nTrials,1);
 end 
