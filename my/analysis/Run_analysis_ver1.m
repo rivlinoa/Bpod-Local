@@ -5,8 +5,8 @@
 % same cage and experiment. each data file should be loaded to a seperate
 % variable. you can drag the file to the workspace and copy the correct line from the command window.
 
-file1 = load('C:\Users\owner\Documents\Bpod Local\Data\18.09.20_09.52.05\Session Data\18.09.20_09.52.05.mat');
-file2 = load('C:\Users\owner\Documents\Bpod Local\Data\18.09.20_22.27.19\Session Data\18.09.20_22.27.19.mat');
+file1 = load('C:\Users\owner\Documents\Bpod Local\Data\18.10.10_09.22.39.mat');
+file2 = load('C:\Users\owner\Documents\Bpod Local\Data\18.10.10_13.34.19.mat');
 % file3 = ...
 %% B- load animals file
 load('C:\Users\owner\Documents\Bpod Local\Data\animals_09_06_18.mat')
@@ -260,6 +260,26 @@ for current_animal = unique(IDanimal)'
        
 end
 control_axes(no_presence_H)
+
+
+%% figure for activity during the day
+% all mice in the cage collapsed
+figure()
+histogram(T.trial_time.Hour)
+xlabel('Hour in the day')
+ylabel('Count')
+title('Activity during the day, whole cage')
+
+%collored by mouse (to see if thee is one that has different hours)
+figure()
+hold on
+for name = unique(T.names)'
+    histogram(T.trial_time.Hour(T.names==name))
+end
+legend(num2str(unique(T.names)))
+xlabel('Hour in the day')
+ylabel('Count')
+title('Activity during the day, by mouse')
 
 %% save all figures in a folder.
 % notice the file name of the figure is named after the date of the
