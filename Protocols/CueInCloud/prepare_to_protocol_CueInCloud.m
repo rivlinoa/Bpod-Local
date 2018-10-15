@@ -1,17 +1,15 @@
 %{
 ----------------------------------------------------------------------------
 
-function PREPARE_TO_PROTOCOL creates all files needed for data saving,
+function PREPARE_TO_PROTOCOL_CUEINCLOUD creates all files needed for data saving,
 and initiates the Bpod object.
+it also loads thw waveplayer with the cloud and cue signal to be played. 
 
 ----------------------------------------------------------------------------
-% Created by Noa, 21.6.18
+% Created by Noa, 21.6.18, 
+% Eddited 3.10.18
 %}
-% Usage:
-% prepare_to_protocol('Start') - Loads the launch manager, and creates the data
-% file.
-% prepare_to_protocol('Stop') - Stops the currently running protocol. Data from the
-% partially completed trial is discarded.
+
 
 function prepare_to_protocol_CueInCloud(animals)
 
@@ -39,9 +37,9 @@ A.OutputRange = '0V:5V';
 load('C:\Users\owner\Documents\Bpod Local\Protocols\CueInCloud\cloud.mat');
 load('C:\Users\owner\Documents\Bpod Local\Protocols\CueInCloud\cue.mat');
 cue = cue.*5.*0.99; % maximal rage in 0-5v outputrange
-stim = stim.*(2.5).*0.99;% maximal volume relatively (1:2) in 0-5v outputrange
+stim = stim.*(5).*0.99;% maximal rage in 0-5v outputrange
 
-attenuations = logspace(0,1,10);
+attenuations = logspace(-0.2,1,6);
 cloudmat = attenuations'*stim.*0.1;
 
 for i=1:10

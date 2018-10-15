@@ -1,11 +1,11 @@
 optionalfreq = logspace(3.3,4.35,50);
-stimulus_length = 4; %ms
-chord_length = 0.05; %ms
+stimulus_length = 4; %sec
+chord_length = 0.1; %sec
 chord_num = stimulus_length/chord_length;
 
 SamplingRate = 50000;
 Ramplength = 0.01;
-Stlength = 0.100;
+Stlength = 0.1;
 %Create evenlop
 dt=1/SamplingRate;
 n_ramp = Ramplength*SamplingRate;
