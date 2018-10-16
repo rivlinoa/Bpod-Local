@@ -22,8 +22,8 @@ else
     response_duration = 1.5;
 end
 
-T.result=cell(SessionData.nTrials,1);
-for i=1:SessionData.nTrials
+
+for i=1:length(T.is_light)
     % first inintiaite as empty just in case of a bug. 
     T.trial_result(i)={' '};
     % if cue wasnt presented mark as premature (later will change some to

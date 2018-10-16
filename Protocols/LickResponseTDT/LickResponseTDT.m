@@ -75,6 +75,8 @@ for currentTrial = 1:MaxTrials
         BpodSystem.Data.TrialSettings(currentTrial) = S; % Adds the settings used for the current trial to the Data struct (to be saved after the trial ends)
         BpodSystem.Data.Cuetype{currentTrial} = Cuetype; % Adds the trial type of the current trial to data
         BpodSystem.Data.IsLight(currentTrial) = IsLight; % Adds the trial type of the current trial to data
+        BpodSystem.Data.Delay(currentTrial) = Delay; % Adds the trial type of the current trial to data
+        BpodSystem.Data.Settings{currentTrial} = S; % Adds the trial type of the current trial to data
         
         
         SaveBpodSessionData; % Saves the field BpodSystem.Data to the current data file
