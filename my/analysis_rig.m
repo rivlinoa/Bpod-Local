@@ -44,7 +44,8 @@ for i=1:length(T.is_light)
     
     % other cases are late... (I THINK THIS CHANGES OMISSIONS TO LATE AS
     % WELL)
-    elseif (isfield(SessionData.RawEvents.Trial{1, i}.Events, 'GlobalTimer1_End'))
+    elseif (isfield(SessionData.RawEvents.Trial{1, i}.Events, 'GlobalTimer1_End')) && ...
+           isfield(SessionData.RawEvents.Trial{1, i}.Events, 'Port1In')
         T.trial_result(i)={'late'};               
 
     end
