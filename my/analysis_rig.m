@@ -12,13 +12,14 @@ function [T] = analysis_rig(SessionData)
 T = table();
 if isfield(SessionData, 'Delay')
     T.delay = SessionData.delay';
+    
 end
 T.is_light = SessionData.IsLight';
 
 if isfield(SessionData, 'Settings')
     response_duration = SessionData.Settings(1).S.GUI.ResponseDuration;
 else
-    response_duration = SessionData.Settings(1).S.GUI.ResponseDuration;
+    response_duration = 1.5;
 end
 
 T.result=cell(SessionData.nTrials,1);
@@ -40,9 +41,10 @@ for i=1:SessionData.nTrials
     if ~isnan(SessionData.RawEvents.Trial{1, i}.States.Reward(1,1))
         T.trial_result(i)={'correct'};
       
-    end
-    % other cases are late...
-    if (isfield(SessionData.RawEvents.Trial{1, i}.Events, 'GlobalTimer1_End'))
+    
+    % other cases are late... (I THINK THIS CHANGES OMISSIONS TO LATE AS
+    % WELL)
+    elseif (isfield(SessionData.RawEvents.Trial{1, i}.Events, 'GlobalTimer1_End'))
         T.trial_result(i)={'late'};               
 
     end
