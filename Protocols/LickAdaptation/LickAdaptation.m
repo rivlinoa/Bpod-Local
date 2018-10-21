@@ -5,7 +5,7 @@ function LickAdaptation
 global BpodSystem
 S = BpodSystem.ProtocolSettings; % Load settings chosen in launch manager into current workspace as a struct called S
 if isempty(fieldnames(S))  % If settings file was an empty struct, populate struct with default settings
-    S.GUI.RewardAmount = 15; %ul
+    S.GUI.RewardAmount = 5; %ul
 end
 MaxTrials = 100000;
 
@@ -34,9 +34,9 @@ for currentTrial = 1:MaxTrials
     sma = AddState(sma, 'Name', 'Reward', ...
         'Timer', ValveTime,...
         'StateChangeConditions', {'Tup', 'Drinking'},...
-        'OutputActions', {'ValveState', 1});
+        'OutputActions', {'ValveState', 1,'BNCState', 1 });
     sma = AddState(sma, 'Name', 'Drinking', ...
-        'Timer', 0.2,...
+        'Timer', 1,...
         'StateChangeConditions', {'Tup', 'exit'},...
         'OutputActions', {});
     SendStateMatrix(sma);
@@ -52,4 +52,5 @@ for currentTrial = 1:MaxTrials
     end
 end
 end 
+    
     

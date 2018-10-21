@@ -12,17 +12,18 @@ function [T] = analysis_rig(SessionData)
 T = table();
 if isfield(SessionData, 'Delay')
     T.delay = SessionData.delay';
+    
 end
 T.is_light = SessionData.IsLight';
 
 if isfield(SessionData, 'Settings')
     response_duration = SessionData.Settings(1).S.GUI.ResponseDuration;
 else
-    response_duration = SessionData.Settings(1).S.GUI.ResponseDuration;
+    response_duration = 1.5;
 end
 
-T.result=cell(SessionData.nTrials,1);
-for i=1:SessionData.nTrials
+
+for i=1:length(T.is_light)
     % first inintiaite as empty just in case of a bug. 
     T.trial_result(i)={' '};
     % if cue wasnt presented mark as premature (later will change some to
@@ -40,9 +41,11 @@ for i=1:SessionData.nTrials
     if ~isnan(SessionData.RawEvents.Trial{1, i}.States.Reward(1,1))
         T.trial_result(i)={'correct'};
       
-    end
-    % other cases are late...
-    if (isfield(SessionData.RawEvents.Trial{1, i}.Events, 'GlobalTimer1_End'))
+    
+    % other cases are late... (I THINK THIS CHANGES OMISSIONS TO LATE AS
+    % WELL)
+    elseif (isfield(SessionData.RawEvents.Trial{1, i}.Events, 'GlobalTimer1_End')) && ...
+           isfield(SessionData.RawEvents.Trial{1, i}.Events, 'Port1In')
         T.trial_result(i)={'late'};               
 
     end
