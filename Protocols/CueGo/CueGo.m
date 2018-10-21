@@ -42,7 +42,7 @@ else
     if (isfield(BpodSystem.ModuleUSB, 'WavePlayer1'))
         WavePlayerUSB = BpodSystem.ModuleUSB.WavePlayer1;
     else
-        error('Error: To run this protocol, you must first pair the AudioPlayer1 module with its USB port. Click the USB config button on the Bpod console.')
+        error('Error: To run this protocol, you must first pair the WavePlayer1 module with its USB port. Click the USB config button on the Bpod console.')
     end
     
     % Create an instance of the audioPlayer module
@@ -97,8 +97,8 @@ S.GUI.Delay = Delay;
 %S = BpodParameterGUI('sync', S); % Sync parameters with BpodParameterGUI plugin
 R = GetValveTimes(S.GUI.RewardAmount, 1 ); ValveTime = R; % Update reward amounts
 sma = NewStateMatrix(); % Assemble state matrix
-sma = SetCondition(sma, 1, 'Port4', 1); % a condition where port 4 is in
-sma = SetCondition(sma, 2, 'Port4', 0); % a condition where port 4 is out
+sma = SetCondition(sma, 1, 'Port4', 1); % a condition where port 4 is in 
+sma = SetCondition(sma, 2, 'Port4', 0); % a condition where port 4 is out 
 sma = AddState(sma, 'Name', 'WaitForPresence', ...
     'Timer', 1,... %what are the units? seconds?
     'StateChangeConditions', {'Port4In','Delay','Condition1', 'Delay', 'Port4Out','exit', 'Tup', 'exit'},...

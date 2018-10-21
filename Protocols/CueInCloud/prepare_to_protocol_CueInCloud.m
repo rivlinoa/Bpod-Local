@@ -42,7 +42,7 @@ stim = stim.*(5).*0.99;% maximal rage in 0-5v outputrange
 attenuations = logspace(-0.2,1,6);
 cloudmat = attenuations'*stim.*0.1;
 
-for i=1:10
+for i=1:length(attenuations)
     A.loadWaveform(i, cloudmat(i,:)); % the cloud, for now only one with 10 attenuations...
 end
 A.loadWaveform(11, cue); % the cue - maximal volume 
