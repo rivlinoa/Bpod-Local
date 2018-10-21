@@ -62,7 +62,9 @@ end
         t = [0:(1/SF):0.5];
         IsCue =  wgn(1,length(t),1);
         IsCue = IsCue / max(IsCue);
+        IsCue = IsCue + abs(min(IsCue));
         NoCue =  chirp(t, 200, t(end), 5000);
+        NoCue = NoCue + abs(min(NoCue));
         A.loadWaveform(2, IsCue);
         A.loadWaveform(3, NoCue);
         BpodSystem.GUIData.LastFrequency = S.GUI.SinWaveFreq;
