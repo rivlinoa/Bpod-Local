@@ -8,9 +8,9 @@ and initiates the Bpod object.
 % Created by Noa, 21.6.18
 %}
 % Usage:
-% prepare_to_protocol('Start') - Loads the launch manager, and creates the data
+% prepare_to_protocol('Start', animals) - Loads the launch manager, and creates the data
 % file.
-% prepare_to_protocol('Stop') - Stops the currently running protocol. Data from the
+% prepare_to_protocol('Stop', animals) - Stops the currently running protocol. Data from the
 % partially completed trial is discarded.
 
 function prepare_to_protocol(Opstring, animals)
@@ -52,6 +52,7 @@ switch Opstring
         BpodSystem.GUIData.animals.animals_tags=animals.tags;
         BpodSystem.GUIData.animals.reward_supplied=zeros(size(BpodSystem.GUIData.animals.animals_names));
         BpodSystem.GUIData.animals.visit_count=zeros(size(BpodSystem.GUIData.animals.animals_names));
+        BpodSystem.GUIData.animals.not_active=zeros(size(BpodSystem.GUIData.animals.animals_names));
         
         BpodSystem.GUIData.LastFrequency=0;
         
@@ -64,6 +65,10 @@ switch Opstring
         BpodSystem.ProtocolFigures.visit_count = figure('name','Visit count','numbertitle','off', 'MenuBar', 'none', 'Resize', 'off');
         BpodSystem.GUIHandles.visit_count = axes();
         visit_plot(BpodSystem.GUIHandles.visit_count,'init');
+        
+        BpodSystem.ProtocolFigures.not_active = figure('name','Not active','numbertitle','off', 'MenuBar', 'none', 'Resize', 'off');
+        BpodSystem.GUIHandles.not_active = axes();
+        not_active_plot(BpodSystem.GUIHandles.not_active,'init');
         
     case 'Stop'
         if ~isempty(BpodSystem.Status.CurrentProtocolName)

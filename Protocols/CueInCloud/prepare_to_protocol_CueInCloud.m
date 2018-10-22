@@ -3,10 +3,10 @@
 
 function PREPARE_TO_PROTOCOL_CUEINCLOUD creates all files needed for data saving,
 and initiates the Bpod object.
-it also loads thw waveplayer with the cloud and cue signal to be played. 
+it also loads thw waveplayer with the cloud and cue signal to be played.
 
 ----------------------------------------------------------------------------
-% Created by Noa, 21.6.18, 
+% Created by Noa, 21.6.18,
 % Eddited 3.10.18
 %}
 
@@ -45,7 +45,7 @@ cloudmat = attenuations'*stim.*0.1;
 for i=1:length(attenuations)
     A.loadWaveform(i, cloudmat(i,:)); % the cloud, for now only one with 10 attenuations...
 end
-A.loadWaveform(11, cue); % the cue - maximal volume 
+A.loadWaveform(11, cue); % the cue - maximal volume
 
 %load serial messages - play cloud in 10 attenuations on channel 2
 %(messages 1-10), play cue on channel 1 (message 11)
@@ -53,7 +53,7 @@ LoadSerialMessages('WavePlayer1', {['P',2,0],['P',2,1],['P',2,2],['P',2,3]...
     ,['P',2,4],['P',2,5],['P',2,6],['P',2,7],['P',2,8],['P',2,9],['P',1,10],['S']});
 %%
 % Loading the sequences to the data so it would be saved for later
-% analysis. 
+% analysis.
 BpodSystem.Data=struct;
 BpodSystem.Data.cloud = stim;
 BpodSystem.Data.cue = cue;
@@ -88,6 +88,7 @@ BpodSystem.GUIData.animals.animals_names=animals.names;
 BpodSystem.GUIData.animals.animals_tags=animals.tags;
 BpodSystem.GUIData.animals.reward_supplied=zeros(size(BpodSystem.GUIData.animals.animals_names));
 BpodSystem.GUIData.animals.visit_count=zeros(size(BpodSystem.GUIData.animals.animals_names));
+BpodSystem.GUIData.animals.not_active=zeros(size(BpodSystem.GUIData.animals.animals_names));
 
 %% initialize plots:
 
@@ -99,5 +100,7 @@ BpodSystem.ProtocolFigures.visit_count = figure('name','Visit count','numbertitl
 BpodSystem.GUIHandles.visit_count = axes();
 visit_plot(BpodSystem.GUIHandles.visit_count,'init');
 
-
+BpodSystem.ProtocolFigures.not_active = figure('name','Not active','numbertitle','off', 'MenuBar', 'none', 'Resize', 'off');
+BpodSystem.GUIHandles.not_active = axes();
+not_active_plot(BpodSystem.GUIHandles.not_active,'init');
 end

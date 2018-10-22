@@ -18,10 +18,12 @@ global BpodSystem
 S = BpodSystem.ProtocolSettings; % Load settings chosen in run_protocol_single_trial into current workspace as a struct called S
 if isempty(fieldnames(S))  % If settings file was an empty struct, populate struct with default settings
     S.GUI.RewardAmount = 5; % ul
+     S.GUI.ResponseDuration = 3;
     S.GUI.CueType = 'visual';
     S.GUI.CueDuration = 3;
     S.GUI.CueIntensity = 255; % from 1 to 255
     S.GUI.MaxDelay = 2; % sec
+    S.GUI.MinDelay = 0; % sec
     S.GUI.Delay = ' ';
     
 end
