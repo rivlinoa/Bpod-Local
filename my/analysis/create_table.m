@@ -32,10 +32,15 @@ T.RFID=categorical(T.RFID);
  
 %% add different parameters
 T.protocol_name = SessionData.ProtocolName';
-T.cue_type = SessionData.CueTypes';
+
+T.cue_type = cell(SessionData.nTrials,1);
+T.cue_type(1:size(SessionData.CueTypes,2)) = SessionData.CueTypes';
+
 T.reward_supplied = zeros(SessionData.nTrials,1); % If last trial was not rewarded, rewared supplied length is shorter.
 T.reward_supplied(1:size(SessionData.reward_supplied,2)) = SessionData.reward_supplied';
-T.delay=SessionData.Delay';
+
+T.delay = cell(SessionData.nTrials,1);
+T.delay(1:size(SessionData.Delay,2))=SessionData.Delay';
 
 if isfield(SessionData, 'attencloud')
     T.attencloud = cell2mat(SessionData.attencloud)';
@@ -60,20 +65,23 @@ end
 %% Add reaction time +  visit duration
 T.reaction_time = NaN(SessionData.nTrials,1);
 T.visit_duration = NaN(SessionData.nTrials,1);
+T.RT = NaN(SessionData.nTrials,1);
 % calculate the time diffrence between presnce detection and first
 % nosepoke.
 for i=1:SessionData.nTrials
     if isfield(SessionData.RawEvents.Trial{1, i}.Events, 'Port1In')
         T.reaction_time(i) = SessionData.RawEvents.Trial{1, i}.Events.Port1In(1) - ...
             SessionData.RawEvents.Trial{1, i}.States.WaitForPresence(2);
+        T.RT(i) = T.reaction_time(i) - cell2mat(T.delay(i));
     end
     if isfield(SessionData.RawEvents.Trial{1, i}.Events, 'Condition1')
        T.visit_duration(i) = SessionData.RawEvents.Trial{1, i}.Events.Condition2  - SessionData.RawEvents.Trial{1, i}.Events.Condition1 ;
     else
        T.visit_duration(i) = 0;
     end 
+    
 end
-T.RT = T.reaction_time - cell2mat(T.delay);
+
 
 
 
@@ -81,32 +89,33 @@ T.RT = T.reaction_time - cell2mat(T.delay);
 
 T.trial_result=cell(SessionData.nTrials,1);
 for i=1:SessionData.nTrials
+    if ~strcmp(SessionData.ProtocolName{1, i} , 'NotActive') 
     % first inintiaite as empty just in case of a bug. 
-    T.trial_result(i)={' '};
-    % if cue wasnt presented mark as premature (later will change some to
-    % be omitted)
-    if isnan(SessionData.RawEvents.Trial{1, i}.States.CueOn(1,1))
-        T.trial_result(i)={'premature'};
-    end
-    
-    % if there was no nosepoke mark as omitted
-    if ~isfield(SessionData.RawEvents.Trial{1, i}.Events, 'Port1In')
-        T.trial_result(i)={'omitted'};
-    end
-    % If there is no presence mark as 'no presence'. 
-    if ~isfield(SessionData.RawEvents.Trial{1, i}.Events, 'Condition1')
-        T.trial_result(i)={'no_presence'};
-    end
-    % if there was a reward state mark as correct
-    if ~isnan(SessionData.RawEvents.Trial{1, i}.States.Reward(1,1))
-        T.trial_result(i)={'correct'};
-    end
-    % other cases are late...
-    if (isfield(SessionData.RawEvents.Trial{1, i}.Events, 'Port1In'))&&...
-            (T.reaction_time(i)>(T.delay{i}+T.response_duration(i)))
-        T.trial_result(i)={'late'};
-    end
-    
+        T.trial_result(i)={' '};
+        % if cue wasnt presented mark as premature (later will change some to
+        % be omitted)
+        if isnan(SessionData.RawEvents.Trial{1, i}.States.CueOn(1,1))
+            T.trial_result(i)={'premature'};
+        end
+
+        % if there was no nosepoke mark as omitted
+        if ~isfield(SessionData.RawEvents.Trial{1, i}.Events, 'Port1In')
+            T.trial_result(i)={'omitted'};
+        end
+        % If there is no presence mark as 'no presence'. 
+        if ~isfield(SessionData.RawEvents.Trial{1, i}.Events, 'Condition1')
+            T.trial_result(i)={'no_presence'};
+        end
+        % if there was a reward state mark as correct
+        if ~isnan(SessionData.RawEvents.Trial{1, i}.States.Reward(1,1))
+            T.trial_result(i)={'correct'};
+        end
+        % other cases are late...
+        if (isfield(SessionData.RawEvents.Trial{1, i}.Events, 'Port1In'))&&...
+                (T.reaction_time(i)>(T.delay{i}+T.response_duration(i)))
+            T.trial_result(i)={'late'};
+        end
+    end  
 end
 
 

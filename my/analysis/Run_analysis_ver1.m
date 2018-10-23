@@ -1,13 +1,21 @@
 %% Run analysis ver 1 - offline analysis for gocue protocol in Bpod.
 
+% all graphes represents activity in the activ hours only, unkess specified
+% otherwise. 
+
+% created by Noa
+% editted 21.10.18
+
+
+
 %% A - load data files (as exported from bpod):
 % User should loadd as much data files as needed (all should be from the
 % same cage and experiment. each data file should be loaded to a seperate
 % variable. you can drag the file to the workspace and copy the correct line from the command window.
 
-file1 = load('C:\Users\owner\Documents\Bpod Local\Data\18.10.10_09.22.39.mat');
-file2 = load('C:\Users\owner\Documents\Bpod Local\Data\18.10.10_13.34.19.mat');
-% file3 = ...
+file1 = load('C:\Users\owner\Documents\Bpod Local\Data\18.10.22_15.06.53\Session Data\18.10.22_15.06.53.mat');
+%file2 = load('C:\Users\owner\Documents\Bpod Local\Data\18.10.14_14.34.00\Session Data\18.10.14_14.34.00.mat');
+%file3 = load('C:\Users\owner\Documents\Bpod Local\Data\18.10.03_14.26.26\Session Data\18.10.03_14.26.26.mat');
 %% B- load animals file
 load('C:\Users\owner\Documents\Bpod Local\Data\animals_09_06_18.mat')
 
@@ -15,15 +23,14 @@ load('C:\Users\owner\Documents\Bpod Local\Data\animals_09_06_18.mat')
 % example: T = create_table(SessionData, animals, filename)
 % you can ignore warnings if they appear
 T1 = create_table(file1, animals, 'table1');
-T2 = create_table(file2, animals, 'table2');
+%T2 = create_table(file2, animals, 'table2');
 
 
 %% Connect two tables
-T = [T1; T2];
-%T = T1;
+%T_all = [T1; T2];
+T_all = T1;
+T = T_all(~strcmp(T_all.protocol_name, 'NotActive'),:);
 %% create summary table and 2 plots:
-T.RT = T.reaction_time - cell2mat(T.delay);
-
 data_set=struct();
 
 F.reward_figure = figure('Name', 'Reward plot');
@@ -130,6 +137,7 @@ for day = unique(T_presence.date)'
         xlim([0 5])       
         
         %% prepare data to plot performance by cue type
+        T_animal.cue_type = categorical(T_animal.cue_type);
         [cue_inds, cueID] = findgroups (T_animal.cue_type);
         T_animal.cue_inds = cue_inds;
         correct = splitapply((@(r) sum(strcmp(r,'correct'))),T_animal.trial_result, T_animal.cue_inds);
@@ -162,8 +170,8 @@ for day = unique(T_presence.date)'
         figure(F.RT_delay_figure)
         RT_delay_H(subplot_value) = subplot(sum(animalsID>0), length(unique(T_presence.date)),  subplot_value);
         hold on
-        for cue=unique(T_animal.cue_type)'
-            relevant_inds = strcmp(T_animal.cue_type, cue);
+        for cue=categories(T_animal.cue_type)'
+            relevant_inds = (T_animal.cue_type == cell2mat(cue));
             plot(cell2mat(T_animal.delay(relevant_inds)), T_animal.RT(relevant_inds),'o')
         end
         line(xlim(), [0,0]);
@@ -171,7 +179,7 @@ for day = unique(T_presence.date)'
         ylabel ('RT relative to cue (sec)')
         ylim ([-3,3])
         title(['Day ',num2str(day), ' mouse ' , num2str(animal_ind)])
-        legend(unique(T_animal.cue_type))
+        legend(categories(T_animal.cue_type))
         
         % plot sucess rate by attenuation for cue in cloud protocol:
         
@@ -265,21 +273,21 @@ control_axes(no_presence_H)
 %% figure for activity during the day
 % all mice in the cage collapsed
 figure()
-histogram(T.trial_time.Hour)
+histogram(T_all.trial_time.Hour)
 xlabel('Hour in the day')
 ylabel('Count')
-title('Activity during the day, whole cage')
+title('Activity during the day (active + not active), whole cage')
 
 %collored by mouse (to see if thee is one that has different hours)
 figure()
 hold on
-for name = unique(T.names)'
-    histogram(T.trial_time.Hour(T.names==name))
+for name = unique(T_all.names)'
+    histogram(T_all.trial_time.Hour(T_all.names==name))
 end
-legend(num2str(unique(T.names)))
+legend(num2str(unique(T_all.names)))
 xlabel('Hour in the day')
 ylabel('Count')
-title('Activity during the day, by mouse')
+title('Activity during the day (active+not), by mouse')
 
 %% save all figures in a folder.
 % notice the file name of the figure is named after the date of the
