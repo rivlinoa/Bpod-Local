@@ -1,19 +1,20 @@
 %
 function LickResponseTDT
 global BpodSystem
-S = BpodSystem.ProtocolSettings; % Load settings chosen in run_protocol_single_trial into current workspace as a struct called S
-if isempty(fieldnames(S))  % If settings file was an empty struct, populate struct with default settings
-    S.GUI.RewardAmount = 5; % ul
-    S.GUI.ResponseDuration = 1.5; % sec
-    S.GUI.LightProb = 0.5; % Between 0-1, fraction of trials that would have auditory+visual stimulus.
-    S.GUI.LightIntensity = 15; % 1-255
-    S.GUI.MaxDelay = 2; % sec
-    S.GUI.MinDelay = 0.5; % sec
+S = BpodSystem.ProtocolSettings;     % Load settings chosen in run_protocol_single_trial into current workspace as a struct called S
+if isempty(fieldnames(S))            % If settings file was an empty struct, populate struct with default settings
+    S.GUI.RewardAmount = 5;          % ul
+    S.GUI.ResponseDuration = 1.5;    % sec
+    S.GUI.LightProb = 0.5;           % Between 0-1, fraction of trials that would have auditory+visual stimulus.
+    S.GUI.RewardProb = 1;            % Between 0-1, fraction of correct trials that would be rewarded.
+    S.GUI.LightIntensity = 15;       % 1-255
+    S.GUI.MaxDelay = 2;              % sec
+    S.GUI.MinDelay = 0.5;            % sec
 end
 
 BpodParameterGUI('init', S);
-
-
+BpodNotebook('init'); % Initialize Bpod notebook (for manual data annotation)
+BpodSystem.Data = BpodNotebook('sync', BpodSystem.Data); % Sync with Bpod notebook plugin
 
 %% Initialize plots
 
@@ -31,12 +32,22 @@ for currentTrial = 1:MaxTrials
              Cuetype = 'AudVis';
              IsLight=1;
     else 
-             CueAction = {}; % only auditory produced by TDT
+             CueAction = {};      % only auditory produced by TDT
              Cuetype ='Aud';
              IsLight=0;
     end
     
-    sma = NewStateMatrix(); % Assemble state matrix
+    
+    if rand(1) <= S.GUI.RewardProb
+        RewardAction = {'ValveState', 1, 'BNCState', 1,'GlobalTimerTrig',2};
+        IsReward = 1;           % if there would be a reward for correct trial
+    else 
+        RewardAction = {'ValveState', 1, 'BNCState', 1,'GlobalTimerTrig',2};
+        IsReward = 1;           % if there would be a reward for correct trial
+    end 
+    
+    
+    sma = NewStateMatrix();     % Assemble state matrix
     sma = SetGlobalTimer(sma, 1, Delay+S.GUI.ResponseDuration); 
     sma = SetGlobalTimer(sma, 2, (S.GUI.ResponseDuration+3)); 
     sma = AddState(sma, 'Name', 'WaitForBBN', ...
@@ -62,7 +73,7 @@ for currentTrial = 1:MaxTrials
     sma = AddState(sma, 'Name', 'Reward', ...
         'Timer', ValveTime,...
         'StateChangeConditions', {'Tup', 'Drinking'},...
-        'OutputActions', {'ValveState', 1, 'BNCState', 1,'GlobalTimerTrig',2}); 
+        'OutputActions', RewardAction); 
     sma = AddState(sma, 'Name', 'Drinking', ...
         'Timer', 0,...
         'StateChangeConditions', {'GlobalTimer2_End', 'exit', 'Port1In', 'ReportLick'},...
@@ -76,6 +87,7 @@ for currentTrial = 1:MaxTrials
         BpodSystem.Data.Cuetype{currentTrial} = Cuetype; % Adds the trial type of the current trial to data
         BpodSystem.Data.IsLight(currentTrial) = IsLight; % Adds the trial type of the current trial to data
         BpodSystem.Data.Delay(currentTrial) = Delay; % Adds the trial type of the current trial to data
+        BpodSystem.Data.IsReward(currentTrial) = IsReward; % Adds the trial type of the current trial to data
         BpodSystem.Data.Settings{currentTrial} = S; % Adds the trial type of the current trial to data
         
         
