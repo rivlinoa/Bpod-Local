@@ -60,14 +60,13 @@ for i=1:length(T.is_light)
     
 end
 
-% get the information of the 
+% get the information of the mouse from folder name
 mydir = pwd;
 
-%% un comment later
-% idcs = strfind(mydir,filesep);
-% TaskAnalysis.Info = {mydir(idcs(end-2)+1:idcs(end-1)-1)...
-%     datafile.Info.SessionDate,datafile.Info.SessionStartTime_UTC};
-%% 
+
+idcs = strfind(mydir,filesep);
+TaskAnalysis.Info = {mydir(idcs(end-2)+1:idcs(end-1)-1)...
+    SessionData.Info.SessionDate,SessionData.Info.SessionStartTime_UTC};
 
 A=table;
 VNames = unique(T.trial_result);
@@ -89,6 +88,24 @@ A.Properties.RowNames={'Percent of Trials','Percent Light On','Median_Delay'};
 
 TaskAnalysis.Results=A;
 TaskAnalysis.Data=T;
+
+%saveTable(TaskAnalysis)
+cd(mydir)
+
+function  saveTable (tbl)
+    %saveTable saves to a specified folder on the server (specified in the
+    %first call of cd. 
+cd '\\132.64.59.21\Citri_Lab\gala\Phys data\New Rig'
+subname = ls(strcat([tbl.Info{1},'*']));
+cd (subname)
+if size(ls(strcat(['*',tbl.Info{2}(1:2),'-',tbl.Info{3}(1:2),'*'])))>1
+    error('more than 1 folder with same subject and time, save manually')
+else
+expdate = ls(strcat(['*',tbl.Info{2}(1:2),'-',tbl.Info{3}(1:2),'*']));
+cd (expdate)
+save('Behavior_Data.mat','TaskAnalysis')
+end
+end
 
 end 
 

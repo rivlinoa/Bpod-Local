@@ -8,13 +8,12 @@ if isempty(fieldnames(S))            % If settings file was an empty struct, pop
     S.GUI.LightProb = 0.5;           % Between 0-1, fraction of trials that would have auditory+visual stimulus.
     S.GUI.RewardProb = 1;            % Between 0-1, fraction of correct trials that would be rewarded.
     S.GUI.LightIntensity = 15;       % 1-255
-    S.GUI.MaxDelay = 2;              % sec
-    S.GUI.MinDelay = 0.5;            % sec
+    S.GUI.MaxDelay = 2.5;              % sec
+    S.GUI.MinDelay = 0.75;            % sec
 end
 
 BpodParameterGUI('init', S);
 BpodNotebook('init'); % Initialize Bpod notebook (for manual data annotation)
-BpodSystem.Data = BpodNotebook('sync', BpodSystem.Data); % Sync with Bpod notebook plugin
 
 %% Initialize plots
 
@@ -55,7 +54,7 @@ for currentTrial = 1:MaxTrials
         'StateChangeConditions', {'Port1In', 'ReportLick', 'BNC1High', 'Delay'},...
         'OutputActions', {}); 
     sma = AddState(sma, 'Name', 'ReportLick', ...
-        'Timer', 0.001,...
+        'Timer', 0.0015,...
         'StateChangeConditions', {'Tup', '>back'},...
         'OutputActions', {'BNCState', 1});
     sma = AddState(sma, 'Name', 'Delay', ...
@@ -90,7 +89,7 @@ for currentTrial = 1:MaxTrials
         BpodSystem.Data.IsReward(currentTrial) = IsReward; % Adds the trial type of the current trial to data
         BpodSystem.Data.Settings{currentTrial} = S; % Adds the trial type of the current trial to data
         
-        
+        BpodSystem.Data = BpodNotebook('sync', BpodSystem.Data); % Sync with Bpod notebook plugin
         SaveBpodSessionData; % Saves the field BpodSystem.Data to the current data file
     end
     HandlePauseCondition; % Checks to see if the protocol is paused. If so, waits until user resumes.
