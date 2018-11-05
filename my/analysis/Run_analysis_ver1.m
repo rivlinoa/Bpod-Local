@@ -4,20 +4,26 @@
 % otherwise. 
 
 % created by Noa
-% editted 21.10.18
+% editted 21.10.18, 5.11.18
 
 
 
 %% A - load data files (as exported from bpod):
-% User should loadd as much data files as needed (all should be from the
-% same cage and experiment. each data file should be loaded to a seperate
-% variable. you can drag the file to the workspace and copy the correct line from the command window.
 
-file1 = load('C:\Users\owner\Documents\Bpod Local\Data\18.10.22_15.06.53\Session Data\18.10.22_15.06.53.mat');
-%file2 = load('C:\Users\owner\Documents\Bpod Local\Data\18.10.14_14.34.00\Session Data\18.10.14_14.34.00.mat');
-%file3 = load('C:\Users\owner\Documents\Bpod Local\Data\18.10.03_14.26.26\Session Data\18.10.03_14.26.26.mat');
+file_list = {'18.08.30_11.34.14'}; % write only the file name. without .mat suffix
+                                   % user can add as many filed as wanted
+
+%%
+T=table();
+for file_name = file_list'
+    char_file_name = cell2mat(file_name);
+    full_file_name = ['C:\Users\owner\Documents\Bpod Local\Data\',char_file_name,'\Session Data\', char_file_name,'.mat'];
+    file1 = load(full_file_name);
+    T1 = create_table(file1, animals, 'table1');
+    T = [T;T1];
+end 
 %% B- load animals file
-load('C:\Users\owner\Documents\Bpod Local\Data\animals_09_06_18.mat')
+load('C:\Users\owner\Documents\Bpod Local\Data\animals_23_07_18.mat')
 
 %% C - Cretae a table for each of the files, you should specify the file name to save each of them.
 % example: T = create_table(SessionData, animals, filename)
