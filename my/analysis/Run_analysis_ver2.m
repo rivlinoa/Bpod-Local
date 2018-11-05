@@ -1,4 +1,4 @@
-%% Run analysis ver 1 - offline analysis for gocue protocol in Bpod.
+%% Run analysis ver 2 - offline analysis for gocue protocol in Bpod.
 
 % all graphes represents activity in the activ hours only, unkess specified
 % otherwise. 
@@ -19,15 +19,13 @@ for file_name = file_list'
     char_file_name = cell2mat(file_name);
     full_file_name = ['C:\Users\owner\Documents\Bpod Local\Data\',char_file_name,'\Session Data\', char_file_name,'.mat'];
     file1 = load(full_file_name);
-    T1 = create_table(file1, animals, 'table1');
+    T1 = create_table_no_presence(SessionData, animals);
     T_all = [T_all;T1];
 end 
 %% B- load animals file
-load('C:\Users\owner\Documents\Bpod Local\Data\animals_23_07_18.mat')
-
+load('C:\Users\owner\Documents\Bpod Local\Data\animals_10_03_18.mat')
 
 %% take only trials in the active hours
-T_all = T1;
 T = T_all(~strcmp(T_all.protocol_name, 'NotActive'),:);
 
 %% create summary table and 2 plots:
@@ -39,18 +37,14 @@ F.histogram_figure = figure('Name', 'Histogram plot');
 F.rt_figure = figure('Name', 'Reaction time plot');
 F.cue_type_figure = figure('Name', 'Cue type plot');
 F.RT_delay_figure = figure('Name', 'RT vs. delay');
-F.presence_omission_figure = figure('Name', 'Presence to omission');
+
 if ismember('attencloud', T.Properties.VariableNames)
     F.success_attenuation_figure = figure('Name', 'Success attenuation plot');
 end 
-    
-    
-    
-presence_inds = ~(strcmp(T.trial_result,'no_presence'));
-T_presence = T(presence_inds,:);
-for day = unique(T_presence.date)'
-    data_inds = (T_presence.date==day);
-    T_day = T_presence(data_inds,:);
+
+for day = unique(T.date)'
+    data_inds = (T.date==day);
+    T_day = T(data_inds,:);
     [animals_inds, animalsID] = findgroups (T_day.names);
     
     sum_reward_supplies = splitapply(@sum,T_day.reward_supplied,animals_inds);
@@ -68,9 +62,8 @@ for day = unique(T_presence.date)'
     data_set.(['day',num2str(day)]).results_table = table(animalsID ,correct,omitted,premature,late);
    
     % figure for licks
-    day_ind = find(day==unique(T_presence.date));
-    
-    figure(F.reward_figure)
+    day_ind = find(day==unique(T.date));
+        figure(F.reward_figure)
     hold on
     reward_H(day_ind) = subplot(1, length(unique(T.date)),  day_ind);
     bar(categorical(data_set.(['day',num2str(day)]).animalsID),  data_set.(['day',num2str(day)]).reward)
@@ -79,10 +72,9 @@ for day = unique(T_presence.date)'
     title (['Day',num2str(day)])
     
     % figure for performance
-    
     figure(F.performance_figure)
     hold on
-    visit_H(day_ind) = subplot(1, length(unique(T_presence.date)),  day_ind);
+    visit_H(day_ind) = subplot(1, length(unique(T.date)),  day_ind);
     ytoplot = table2array([data_set.(['day',num2str(day)]).results_table(:,2:end);]);
     bar(categorical(data_set.(['day',num2str(day)]).animalsID), ytoplot, 'stacked');
     ylabel('Visits count')
@@ -116,8 +108,8 @@ for day = unique(T_presence.date)'
         
         %% plot RT relative to cue onset histogram
         figure(F.rt_figure)
-        subplot_value = ((animal_i-1)*length(unique(T_presence.date)))+day_ind;
-        RT_H(subplot_value) = subplot(sum(animalsID>0), length(unique(T_presence.date)),  subplot_value);
+        subplot_value = ((animal_i-1)*length(unique(T.date)))+day_ind;
+        RT_H(subplot_value) = subplot(sum(animalsID>0), length(unique(T.date)),  subplot_value);
         hold on
         histogram( T_animal.RT,'BinWidth',0.05)
         xlabel('Reaction time relative to cue onset')
@@ -125,16 +117,7 @@ for day = unique(T_presence.date)'
         title(['Day ',num2str(day), ' mouse ' , num2str(animal_ind)])
         xlim([-1 3])
         
-        %% plot presence to omission  histogram
-        figure(F.presence_omission_figure)
-        presence_H(subplot_value) = subplot(sum(animalsID>0), length(unique(T_presence.date)),  subplot_value);
-        hold on
-        omission_inds = strcmp(T_animal.trial_result, 'omitted');
-        histogram( T_animal.visit_duration(omission_inds),'BinWidth',0.1)
-        xlabel('Presence before omission')
-        ylabel('Visit count')
-        title(['Day ',num2str(day), ' mouse ' , num2str(animal_ind)])
-        xlim([0 5])       
+            
         
         %% prepare data to plot performance by cue type
         T_animal.cue_type = categorical(T_animal.cue_type);
@@ -147,8 +130,8 @@ for day = unique(T_presence.date)'
         
         
         figure(F.cue_type_figure)
-        subplot_value = ((animal_i-1)*length(unique(T_presence.date)))+day_ind;
-        cue_H(subplot_value) = subplot(sum(animalsID>0), length(unique(T_presence.date)),  subplot_value);
+        subplot_value = ((animal_i-1)*length(unique(T.date)))+day_ind;
+        cue_H(subplot_value) = subplot(sum(animalsID>0), length(unique(T.date)),  subplot_value);
         hold on
         ytoplot = [correct,omitted,premature,late];
         if length(categorical(cueID))<2
@@ -168,7 +151,7 @@ for day = unique(T_presence.date)'
         
         % plot RT vs. delay
         figure(F.RT_delay_figure)
-        RT_delay_H(subplot_value) = subplot(sum(animalsID>0), length(unique(T_presence.date)),  subplot_value);
+        RT_delay_H(subplot_value) = subplot(sum(animalsID>0), length(unique(T.date)),  subplot_value);
         hold on
         for cue=categories(T_animal.cue_type)'
             relevant_inds = (T_animal.cue_type == cell2mat(cue));
@@ -191,7 +174,7 @@ for day = unique(T_presence.date)'
             visits_atten = splitapply (@length, T_animal.RFID, atten_groups);
             success_atten =  splitapply((@(r) sum(strcmp(r,'correct'))),T_animal.trial_result, atten_groups);
             success_atten = success_atten./visits_atten;
-            atten_H(subplot_value) = subplot(sum(animalsID>0), length(unique(T_presence.date)),  subplot_value);
+            atten_H(subplot_value) = subplot(sum(animalsID>0), length(unique(T.date)),  subplot_value);
             hold on
             disp( subplot_value)
             plot (IDatten,success_atten) 
@@ -219,13 +202,13 @@ control_axes(hist_H)
 control_axes(RT_H)
 control_axes(reward_H)
 control_axes(visit_H)
-control_axes(presence_H)
 
-%% success rate line figure - per day & cue type
+
+%% success rate line figure - per day & cue type  -with omissions!!!
 %there is some redundancy in the code but its the easyiest way :(
-[group_inds, IDanimal,IDcue,IDday ] = findgroups (T_presence.names,T_presence.cue_type, T_presence.date );
-visits_2 = splitapply (@length, T_presence.RFID, group_inds);
-success =  splitapply((@(r) sum(strcmp(r,'correct'))),T_presence.trial_result, group_inds);
+[group_inds, IDanimal,IDcue,IDday ] = findgroups (T.names,T.cue_type, T.date );
+visits_2 = splitapply (@length, T.RFID, group_inds);
+success =  splitapply((@(r) sum(strcmp(r,'correct'))),T.trial_result, group_inds);
 success = success./visits_2;
 success_table = table(success ,IDanimal , IDcue , IDday);
 
@@ -238,7 +221,7 @@ for current_animal = unique(IDanimal)'
     success_data = success_table(IDanimal == current_animal,:);
     for cue=unique(success_data.IDcue)'
         relevant_inds = strcmp(success_data.IDcue, cue);
-        plot(unique(success_data.IDday), success_data.success(relevant_inds))
+        plot(unique(success_data.IDday), success_data.success(relevant_inds), 'o')
     end
     subplot_ind = subplot_ind+1;
     xlabel ('Day')
@@ -248,26 +231,39 @@ for current_animal = unique(IDanimal)'
     legend(unique(success_data.IDcue))
     
 end
-%% figure no presence 
-T_no_presence = T(~presence_inds,:);
-[group_inds, IDanimal, IDday ] = findgroups (T_no_presence.names,T_no_presence.date);
-visits_3 = splitapply (@length, T_no_presence.RFID, group_inds);
 
-F.no_presence_figure = figure('Name', 'No presence plot');
+
+%% success rate line figure - per day & cue type  -without omissions!!!
+% ============= No omissions ============================================
+T_no_omittion = T(~strcmp(T.trial_result, 'omitted'),:);
+[group_inds, IDanimal,IDcue,IDday ] = findgroups (T_no_omittion.names,T_no_omittion.cue_type, T_no_omittion.date );
+visits = splitapply (@length, T_no_omittion.RFID, group_inds);
+success =  splitapply((@(r) sum(strcmp(r,'correct'))),T_no_omittion.trial_result, group_inds);
+success = success./visits;
+success_table = table(success ,IDanimal , IDcue , IDday);
+
+F.success_no_omission = figure('Name', 'Success rate without omission!!!');
 subplot_ind = 1;
-figure(F.no_presence_figure)
+figure(F.success_no_omission)
 for current_animal = unique(IDanimal)'
-    no_presence_H(subplot_ind) = subplot(1,length(unique(IDanimal)),subplot_ind);
+    success_H = subplot(1,length(unique(IDanimal)),subplot_ind);
     hold on
-    no_presence_data = visits_3(IDanimal == current_animal,:);
-    bar(categorical(IDday(IDanimal == current_animal)), no_presence_data)
+    success_data = success_table(IDanimal == current_animal,:);
+    for cue=unique(success_data.IDcue)'
+        relevant_inds = strcmp(success_data.IDcue, cue);
+        plot(unique(success_data.IDday), success_data.success(relevant_inds),'o')
+    end
     subplot_ind = subplot_ind+1;
     xlabel ('Day')
     title( ['Mouse ', num2str(current_animal)])
-    ylabel('No presence visits')
-       
+    ylabel('Success rate')
+    ylim ([0 1])
+    legend(unique(success_data.IDcue))
+    title ('Success without omssions')
+    
 end
-control_axes(no_presence_H)
+
+
 
 
 %% figure for activity during the day
@@ -310,7 +306,7 @@ for fig=1:length(fignames)
 end
     
 savefig(F1,figure_file_full)
-save(data_file_full, 'T')
+save(data_file_full, 'T_all')
 
 
 
