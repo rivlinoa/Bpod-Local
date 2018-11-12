@@ -10,20 +10,21 @@
 
 %% A - load data files (as exported from bpod):
 
-file_list = {'18.08.30_11.34.14'}; % write only the file name. without .mat suffix
+file_list = {'18.11.10_19.25.41'}; % write only the file name. without .mat suffix
                                    % user can add as many filed as wanted
+%% B- load animals file
+load('C:\Users\owner\Documents\Bpod Local\Data\animals_10_03_18.mat')
 
 %%
 T_all=table();
-for file_name = file_list'
+for file_name = file_list
     char_file_name = cell2mat(file_name);
     full_file_name = ['C:\Users\owner\Documents\Bpod Local\Data\',char_file_name,'\Session Data\', char_file_name,'.mat'];
     file1 = load(full_file_name);
-    T1 = create_table_no_presence(SessionData, animals);
+    T1 = create_table_no_presence(file1, animals);
     T_all = [T_all;T1];
 end 
-%% B- load animals file
-load('C:\Users\owner\Documents\Bpod Local\Data\animals_10_03_18.mat')
+
 
 %% take only trials in the active hours
 T = T_all(~strcmp(T_all.protocol_name, 'NotActive'),:);
@@ -168,7 +169,7 @@ for day = unique(T.date)'
         
         if ismember('attencloud', T_animal.Properties.VariableNames) 
             figure(F.success_attenuation_figure)
-           [atten_groups, IDatten] = findgroups (T_animal.attencloud);
+           [atten_groups, IDatten] = findgroups (cell2mat(T_animal.attencloud));
            
            %subplot_value = ((animal_i-1)*length(unique(T_presence.date)))+day_ind;
             visits_atten = splitapply (@length, T_animal.RFID, atten_groups);
@@ -221,7 +222,7 @@ for current_animal = unique(IDanimal)'
     success_data = success_table(IDanimal == current_animal,:);
     for cue=unique(success_data.IDcue)'
         relevant_inds = strcmp(success_data.IDcue, cue);
-        plot(unique(success_data.IDday), success_data.success(relevant_inds), 'o')
+        plot(unique(success_data.IDday), success_data.success(relevant_inds), '-o')
     end
     subplot_ind = subplot_ind+1;
     xlabel ('Day')
@@ -251,7 +252,7 @@ for current_animal = unique(IDanimal)'
     success_data = success_table(IDanimal == current_animal,:);
     for cue=unique(success_data.IDcue)'
         relevant_inds = strcmp(success_data.IDcue, cue);
-        plot(unique(success_data.IDday), success_data.success(relevant_inds),'o')
+        plot(unique(success_data.IDday), success_data.success(relevant_inds),'-o')
     end
     subplot_ind = subplot_ind+1;
     xlabel ('Day')

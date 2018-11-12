@@ -44,7 +44,8 @@ T.delay = cell(SessionData.nTrials,1);
 T.delay(1:size(SessionData.Delay,2))=SessionData.Delay';
 
 if isfield(SessionData, 'attencloud')
-    T.attencloud = cell2mat(SessionData.attencloud(1:SessionData.nTrials))';
+    T.attencloud = cell(SessionData.nTrials,1);
+    T.attencloud(1:size(SessionData.attencloud,2)) = SessionData.attencloud';
 end
 
 T.trial_time = SessionData.Info.SessionStartTime_UTC';
@@ -65,7 +66,8 @@ end
 T.RT = NaN(SessionData.nTrials,1);
 
 for i=1:SessionData.nTrials
-    if isfield(SessionData.RawEvents.Trial{1, i}.Events, 'Port1In')
+    if (isfield(SessionData.RawEvents.Trial{1, i}.Events, 'Port1In')) && ...
+        ( ~ strcmp(SessionData.ProtocolName{i}, 'NotActive'))    
         T.RT(i) = SessionData.RawEvents.Trial{1, i}.Events.Port1In(1) - cell2mat(T.delay(i));
     end
 end
