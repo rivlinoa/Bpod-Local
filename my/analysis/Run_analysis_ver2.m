@@ -10,7 +10,7 @@
 
 %% A - load data files (as exported from bpod):
 
-file_list = {'18.11.10_19.25.41'}; % write only the file name. without .mat suffix
+file_list = {'18.12.05_17.12.21'}; % write only the file name. without .mat suffix
                                    % user can add as many filed as wanted
 %% B- load animals file
 load('C:\Users\owner\Documents\Bpod Local\Data\animals_10_03_18.mat')
@@ -222,7 +222,7 @@ for current_animal = unique(IDanimal)'
     success_data = success_table(IDanimal == current_animal,:);
     for cue=unique(success_data.IDcue)'
         relevant_inds = strcmp(success_data.IDcue, cue);
-        plot(unique(success_data.IDday), success_data.success(relevant_inds), '-o')
+        plot(success_data.IDday(relevant_inds), success_data.success(relevant_inds), '-o')
     end
     subplot_ind = subplot_ind+1;
     xlabel ('Day')
@@ -252,7 +252,7 @@ for current_animal = unique(IDanimal)'
     success_data = success_table(IDanimal == current_animal,:);
     for cue=unique(success_data.IDcue)'
         relevant_inds = strcmp(success_data.IDcue, cue);
-        plot(unique(success_data.IDday), success_data.success(relevant_inds),'-o')
+        plot(success_data.IDday(relevant_inds), success_data.success(relevant_inds),'-o')
     end
     subplot_ind = subplot_ind+1;
     xlabel ('Day')
