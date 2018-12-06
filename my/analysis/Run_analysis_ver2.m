@@ -10,8 +10,12 @@
 
 %% A - load data files (as exported from bpod):
 
-file_list = {'18.11.10_19.25.41'}; % write only the file name. without .mat suffix
+file_list = {'18.08.30_11.34.14'}; % write only the file name. without .mat suffix
                                    % user can add as many filed as wanted
+devide_analysis_hours = 1;         % Do you want to analyze some of the data by hours? 1- yes, 0-no.                                   
+analysis_start_hour = '11:30';     % start the analysis at 'hour:minute'
+analysis_end_hour = '12:30';       % end the analysis at 'hour:minute'
+
 %% B- load animals file
 load('C:\Users\owner\Documents\Bpod Local\Data\animals_10_03_18.mat')
 
@@ -27,7 +31,21 @@ end
 
 
 %% take only trials in the active hours
+T_all.hour_minute = datestr(T_all.trial_time,'HH:mm:ss');
 T = T_all(~strcmp(T_all.protocol_name, 'NotActive'),:);
+
+analysis_start_hour = datestr(analysis_start_hour,'HH:mm');
+analysis_end_hour = datestr(analysis_end_hour,'HH:mm');
+
+if devide_analysis_hours
+    %time_a < time_b ---> time_a is *after* time_b
+    T.to_analyze = datenum(T.hour_minute) > datenum(analysis_start_hour) & ...
+                    datenum(T.hour_minute) < datenum(analysis_end_hour);
+               
+    T = T( T.to_analyze, :);
+end 
+    
+end 
 
 %% create summary table and 2 plots:
 data_set=struct();
