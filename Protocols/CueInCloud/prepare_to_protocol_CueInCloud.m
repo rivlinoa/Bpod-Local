@@ -26,7 +26,7 @@ else
     error('Error: To run this protocol, you must first pair the WavePlayer1 module with its USB port. Click the USB config button on the Bpod console.')
 end
 A = BpodWavePlayer(WavePlayerUSB);
-global A
+
 
 % Program sound server
 A.SamplingRate = 50000; % max in 4 ch configurationn.
@@ -45,12 +45,12 @@ cloudmat = attenuations'*stim.*0.1;
 for i=1:length(attenuations)
     A.loadWaveform(i, cloudmat(i,:)); % the cloud, for now only one with 10 attenuations...
 end
-A.loadWaveform(11, cue); % the cue - maximal volume
+A.loadWaveform((length(attenuations)+1), cue); % the cue - maximal volume
 
-%load serial messages - play cloud in 10 attenuations on channel 2
-%(messages 1-10), play cue on channel 1 (message 11)
+%load serial messages - play cloud in 6 attenuations on channel 2
+%(messages 1-6), play cue on channel 1 (message 7)
 LoadSerialMessages('WavePlayer1', {['P',2,0],['P',2,1],['P',2,2],['P',2,3]...
-    ,['P',2,4],['P',2,5],['P',2,6],['P',2,7],['P',2,8],['P',2,9],['P',1,10],['S']});
+    ,['P',2,4],['P',2,5],['P',1,6],['S']});
 %%
 % Loading the sequences to the data so it would be saved for later
 % analysis.
