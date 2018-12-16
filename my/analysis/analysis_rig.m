@@ -51,10 +51,13 @@ for i=1:length(T.is_light)
       
     
     % other cases are late... 
-    elseif (isfield(SessionData.RawEvents.Trial{1, i}.Events, 'GlobalTimer1_End')) && ...
+    elseif (~isnan(SessionData.RawEvents.Trial{1, i}.States.Report_late(1,1))) && ...
            isfield(SessionData.RawEvents.Trial{1, i}.Events, 'Port1In')
         T.trial_result(i) = {'late'};
         T.plot_result(i) = 2;
+    else
+       T.trial_result(i) = {'correct'}; %cases where there was a lick within the timer, but no reward ?!
+        T.plot_result(i) = 1;
 
     end
     
@@ -89,23 +92,29 @@ A.Properties.RowNames={'Percent of Trials','Percent Light On','Median_Delay'};
 TaskAnalysis.Results=A;
 TaskAnalysis.Data=T;
 
-%saveTable(TaskAnalysis)
+var_name = ['Behavior_Data.mat'];
+saveTable(TaskAnalysis, var_name)
 cd(mydir)
 
-function  saveTable (tbl)
+function  saveTable (tbl, save_name)
     %saveTable saves to a specified folder on the server (specified in the
     %first call of cd. 
 cd '\\132.64.59.21\Citri_Lab\gala\Phys data\New Rig'
 subname = ls(strcat([tbl.Info{1},'*']));
 cd (subname)
-if size(ls(strcat(['*',tbl.Info{2}(1:2),'-',tbl.Info{3}(1:2),'*'])))>1
-    error('more than 1 folder with same subject and time, save manually')
+fold_hand = ls(strcat(['*',tbl.Info{2}(1:2),'-',tbl.Info{3}(1:2),'*']));
+if size(fold_hand)>1
+    disp('more than 1 folder with same subject and time, save manually')
+    disp(fold_hand)
+    right_fold = input ('Choose correct folder name (1,2,3 etc)');
+    expdate = fold_hand(right_fold,:);    
 else
-expdate = ls(strcat(['*',tbl.Info{2}(1:2),'-',tbl.Info{3}(1:2),'*']));
+    expdate = ls(strcat(['*',tbl.Info{2}(1:2),'-',tbl.Info{3}(1:2),'*']));
+end
 cd (expdate)
-save('Behavior_Data.mat','TaskAnalysis')
+save(save_name,'TaskAnalysis')
 end
-end
+
 
 end 
 

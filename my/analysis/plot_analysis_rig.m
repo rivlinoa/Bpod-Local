@@ -1,7 +1,7 @@
 %% plot task analysis
 
 cd 'C:\Users\Owner\Documents\Bpod Local\Data\2\LickResponseTDT\Session Data'  % change to the relevant folder in your computer
-file_list = {'2_LickResponseTDT_20181015_130903'};                            % add as many files as you want to
+file_list = {'2_LickResponseTDT_20181204_180227'};                            % add as many files as you want to
 
 performance = figure('Name', 'Performance plot');
 hold on
@@ -13,7 +13,7 @@ for file = file_list
     TaskAnalysis = analysis_rig(SessionData);
     
     % ========= plot pie charts of performance per session ========
-    figure('Name','performaceChart')
+    h0 = figure('Name','performaceChart');
     p = pie(table2array(TaskAnalysis.Results(1,:)));
     pText = findobj(p,'Type','text');
     percentValues = get(pText,'String');
@@ -23,9 +23,10 @@ for file = file_list
         pText(i).String = combinedtxt(i);
     end
     title(strrep(cell2mat(file), '_', '-'));
-    
+
     % === plot performance of the mouse over sessions on the same plot ======
-    figure('Name','performance'), hold on;
+    h1 = figure('Name','performance');
+    hold on;
     x_values = (max_x + 1):(max_x  + max(TaskAnalysis.Data.trial_number));
     x = line([x_values;x_values], [zeros(1,length(x_values));TaskAnalysis.Data.plot_result'],'Color','k');
     gscatter(x_values, TaskAnalysis.Data.plot_result, TaskAnalysis.Data.trial_result)
@@ -34,5 +35,4 @@ for file = file_list
     x_end=line([max_x,max_x] ,[-2, 3],'Color','black', 'LineWidth' , 4);
     set(get(get(x_end,'Annotation'),'LegendInformation'),...
         'IconDisplayStyle','off');                                           %Makes so there is no legend entry for the last line
-    
 end
