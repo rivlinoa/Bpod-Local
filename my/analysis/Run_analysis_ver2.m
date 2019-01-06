@@ -9,10 +9,22 @@
 
 
 %% A - load data files (as exported from bpod):
+file_list = {'19.01.02_22.33.50'};
 
-file_list = {'18.08.30_11.34.14'}; % write only the file name. without .mat suffix
+% file_list = {'18.12.09_11.03.28','18.12.10_08.43.38','18.12.10_11.15.50','18.12.11_14.20.50',...
+%     '18.12.12_08.54.52','18.12.13_10.38.23','18.12.13_16.45.02'}; %Noa's experiment
+   
+% file_list = {'18.12.03_10.50.01','18.12.03_12.04.58','18.12.03_13.17.40','18.12.03_14.27.31','18.12.03_15.36.39',...
+%     '18.12.03_16.54.34','18.12.04_09.04.44','18.12.04_10.03.46','18.12.04_11.08.03','18.12.04_12.15.37','18.12.04_13.08.37',...
+%     '18.12.05_10.07.03','18.12.05_10.40.42','18.12.05_12.00.15','18.12.05_12.33.23','18.12.05_13.42.46','18.12.05_15.25.06',...
+%     '18.12.05_15.59.21','18.12.05_17.12.21','18.12.06_11.00.55','18.12.06_12.32.33','18.12.06_14.07.11','18.12.06_15.34.19',...
+%     '18.12.06_17.05.49','18.12.07_07.53.32','18.12.07_14.10.21'}; % the
+%     week of the experiment.
+
+
+                                   % write only the file name. without .mat suffix
                                    % user can add as many filed as wanted
-devide_analysis_hours = 1;         % Do you want to analyze some of the data by hours? 1- yes, 0-no.                                   
+devide_analysis_hours = 0;         % Do you want to analyze some of the data by hours? 1- yes, 0-no.                                   
 analysis_start_hour = '11:30';     % start the analysis at 'hour:minute'
 analysis_end_hour = '12:30';       % end the analysis at 'hour:minute'
 
@@ -45,7 +57,6 @@ if devide_analysis_hours
     T = T( T.to_analyze, :);
 end 
     
-end 
 
 %% create summary table and 2 plots:
 data_set=struct();
@@ -60,6 +71,12 @@ F.RT_delay_figure = figure('Name', 'RT vs. delay');
 if ismember('attencloud', T.Properties.VariableNames)
     F.success_attenuation_figure = figure('Name', 'Success attenuation plot');
 end 
+if ismember('cue_atten', T.Properties.VariableNames)
+    F.success_cue_attenuation_figure = figure('Name', 'Success cue attenuation plot');
+end 
+
+
+
 
 for day = unique(T.date)'
     data_inds = (T.date==day);
@@ -202,6 +219,26 @@ for day = unique(T.date)'
             ylim ([0,1])
             title(['Day ',num2str(day), ' mouse ' , num2str(animal_ind)])
         end
+        
+        % plot sucess rate by attenuation for cue in fixed cloud protocol (cue is changed):
+        
+        if ismember('cue_atten', T_animal.Properties.VariableNames) 
+            figure(F.success_cue_attenuation_figure)
+           [atten_groups, IDatten] = findgroups (cell2mat(T_animal.cue_atten));
+           
+           %subplot_value = ((animal_i-1)*length(unique(T_presence.date)))+day_ind;
+            visits_atten = splitapply (@length, T_animal.RFID, atten_groups);
+            success_atten =  splitapply((@(r) sum(strcmp(r,'correct'))),T_animal.trial_result, atten_groups);
+            success_atten = success_atten./visits_atten;
+            cue_atten_H(subplot_value) = subplot(sum(animalsID>0), length(unique(T.date)),  subplot_value);
+            hold on
+            disp( subplot_value)
+            plot (IDatten,success_atten) 
+            xlabel('cloud attenuation (1-10)')
+            ylabel ('Success rate')
+            ylim ([0,1])
+            title(['Day ',num2str(day), ' mouse ' , num2str(animal_ind)])
+        end
     end
     
     
@@ -238,19 +275,88 @@ for current_animal = unique(IDanimal)'
     success_H = subplot(1,length(unique(IDanimal)),subplot_ind);
     hold on
     success_data = success_table(IDanimal == current_animal,:);
-    for cue=unique(success_data.IDcue)'
+        for cue=unique(success_data.IDcue)'
         relevant_inds = strcmp(success_data.IDcue, cue);
-        plot(unique(success_data.IDday), success_data.success(relevant_inds), '-o')
-    end
+        unique_days = unique(success_data.IDday);
+            if (length(relevant_inds) ~= length(unique_days))
+                disp('there was a day with no trials of a certain type');
+                day_vec = ismember(unique(success_data.IDday), success_data.IDday(relevant_inds)); % which day is missing?
+                relevant_success = nan(1,length(unique_days));                                     % missing days are nan
+                relevant_success(day_vec) = success_data.success(relevant_inds);                   % fill in non missing days
+                plot(1:length(unique_days), relevant_success, '-o')
+                
+            else
+                relevant_success(day_vec) = success_data.success(relevant_inds); 
+                plot(1:length(unique_days), relevant_success(relevant_inds), '-o')
+            end
+        end
+        
+    success_H.XTickLabel =  cellstr(num2str(unique_days));
     subplot_ind = subplot_ind+1;
     xlabel ('Day')
     title( ['Mouse ', num2str(current_animal)])
     ylabel('Success rate')
     ylim ([0 1])
     legend(unique(success_data.IDcue))
-    
 end
+%% average success rate plot
 
+[avg_group_inds, avgIDcue,avgIDday] = findgroups (success_table.IDcue,success_table.IDday);
+avg_success = splitapply(@sum,success_table.success,avg_group_inds)./numel(unique(success_table.IDanimal));
+avg_success_table = table(avg_success, avgIDcue, avgIDday);
+
+F.avg_success_rate_figure = figure('Name', 'Average success rate plot');
+figure(F.avg_success_rate_figure)
+hold on
+    for cue=unique(avg_success_table.avgIDcue)'
+        avg_relevant_inds = strcmp(avg_success_table.avgIDcue, cue);
+        if (length(avg_relevant_inds) ~= length(unique_days))
+                disp('there was a day with no trials of a certain type');
+                day_vec = ismember(unique(avg_success_table.avgIDday), avg_success_table.avgIDday(avg_relevant_inds)); %which day is missing?
+                avg_relevant_success = nan(1,length(unique_days));                                                     % missing days are nan
+                avg_relevant_success(day_vec) = avg_success_table.avg_success(avg_relevant_inds);                      % fill in non missing days
+                plot(1:length(unique_days),avg_relevant_success,'-O')
+        else
+            avg_relevant_success(day_vec) = avg_success_table.avg_success(avg_relevant_inds); 
+            plot(1:length(unique_days),  avg_relevant_success(avg_relevant_inds), '-o')
+        end 
+    end
+    h_ax = F.avg_success_rate_figure.Children;
+    h_ax.XTickLabels = cellstr(num2str(unique_days));
+    xlabel ('Day')
+    ylabel('Success rate')
+    ylim ([0 1])
+    legend(unique(avg_success_table.avgIDcue))
+       
+    
+
+
+% figure(F.avg_success_rate_figure)
+% hold on
+% for avg_cue=unique(success_table.IDcue)'
+%     avg_relevant_success=splitapply(@sum,success_table.success,avg_group_inds)./numel(unique(success_table.IDanimal))
+%     plot(unique_days, avg_relevant_success, '-o')
+% end
+
+
+    
+% [avg_group_inds,IDcue,IDday ] = findgroups (T.cue_type, T.date );
+% avg_visits_2 = splitapply (@length, T.RFID, avg_group_inds);
+% avg_success =  splitapply((@(r) sum(strcmp(r,'correct'))),T.trial_result, avg_group_inds);
+% avg_success = avg_success./avg_visits_2;
+% avg_success_table = table(avg_success , IDcue , IDday);
+% 
+% F.avg_success_rate_figure = figure('Name', 'Average success rate plot');
+% figure(F.avg_success_rate_figure)
+% hold on
+%     for cue=unique(avg_success_table.IDcue)'
+%         avg_relevant_inds = strcmp(avg_success_table.IDcue, cue);
+%         plot(unique(avg_success_table.IDday), avg_success_table.avg_success(avg_relevant_inds),'-O')
+%         xlabel ('Day')
+%         ylabel('Success rate')
+%         ylim ([0 1])
+%         legend(unique(success_data.IDcue))
+%     end
 
 %% success rate line figure - per day & cue type  -without omissions!!!
 % ============= No omissions ============================================
@@ -270,8 +376,20 @@ for current_animal = unique(IDanimal)'
     success_data = success_table(IDanimal == current_animal,:);
     for cue=unique(success_data.IDcue)'
         relevant_inds = strcmp(success_data.IDcue, cue);
-        plot(unique(success_data.IDday), success_data.success(relevant_inds),'-o')
-    end
+        unique_days = unique(success_data.IDday);
+        if (length(relevant_inds) ~= length(unique_days))
+            disp('there was a day with no trials of a certain type');
+            day_vec = ismember(unique(success_data.IDday), success_data.IDday(relevant_inds)); %which day is missing?
+            relevant_success = nan(1,length(unique_days));                                     % missing days are nan
+            relevant_success(day_vec) = success_data.success(relevant_inds);                   % fill in non missing days
+            plot(1:length(unique_days), relevant_success, '-o')
+            else
+                relevant_success(day_vec) = success_data.success(relevant_inds); 
+                plot(1:length(unique_days), relevant_success(relevant_inds), '-o')
+            end
+        end
+end
+    success_H.XTickLabel =  cellstr(num2str(unique_days));
     subplot_ind = subplot_ind+1;
     xlabel ('Day')
     title( ['Mouse ', num2str(current_animal)])
@@ -280,7 +398,6 @@ for current_animal = unique(IDanimal)'
     legend(unique(success_data.IDcue))
     title ('Success without omssions')
     
-end
 
 
 
