@@ -35,22 +35,34 @@ T.RFID=categorical(T.RFID);
 T.protocol_name = SessionData.ProtocolName';
 
 T.cue_type = cell(SessionData.nTrials,1);
-T.cue_type(1:size(SessionData.CueTypes,2)) = SessionData.CueTypes';
+if isfield(SessionData,'CueTypes')
+    T.cue_type(1:size(SessionData.CueTypes,2)) = SessionData.CueTypes';
+elseif isfield(SessionData,'Cuetype')
+    T.cue_type(1:size(SessionData.Cuetype,2)) = SessionData.Cuetype';
+end
 
 T.reward_supplied = zeros(SessionData.nTrials,1); % If last trial was not rewarded, rewared supplied length is shorter.
-T.reward_supplied(1:size(SessionData.reward_supplied,2)) = SessionData.reward_supplied';
+if isfield(SessionData,'reward_supplied')
+    T.reward_supplied(1:size(SessionData.reward_supplied,2)) = SessionData.reward_supplied';
+end
 
 T.delay = cell(SessionData.nTrials,1);
 T.delay(1:size(SessionData.Delay,2))=SessionData.Delay';
 
+T.attencloud = cell(SessionData.nTrials,1);
 if isfield(SessionData, 'attencloud')
     T.attencloud = cell(SessionData.nTrials,1);
     T.attencloud(1:size(SessionData.attencloud,2)) = SessionData.attencloud';
 end
 
+if isfield(SessionData, 'cue_atten')
+    T.cue_atten = cell(SessionData.nTrials,1);
+    T.cue_atten(1:size(SessionData.cue_atten,2)) = SessionData.cue_atten';
+end
+
 T.trial_time = SessionData.Info.SessionStartTime_UTC';
 T.trial_time = datetime(T.trial_time);
-T.date = datestr(T.trial_time,  'dd');
+T.date = datestr(T.trial_time,  'mmdd');
 T.date = str2num(T.date);
 
 %% Import settings - change!!!

@@ -9,9 +9,22 @@
 
 
 %% A - load data files (as exported from bpod):
-file_list = {'19.01.02_22.33.50'};
+file_list = {'19.01.13_11.09.39'}; 
 
-% file_list = {'18.12.09_11.03.28','18.12.10_08.43.38','18.12.10_11.15.50','18.12.11_14.20.50',...
+
+%  file_list = {'18.08.26_11.01.07', '18.08.28_09.42.23', '18.08.28_12.44.56', ...
+%      '18.08.28_16.20.45', '18.08.29_10.31.04', '18.08.29_18.39.11', ...
+%      '18.08.30_11.34.14', '18.09.02_09.35.10',   ...
+%      '18.09.02_12.27.02', '18.09.02_14.38.44' }; % pilot cloud start
+ 
+% file_list = {'18.11.05_09.56.57','18.11.05_15.38.44', '18.11.05_19.46.26', ...
+% '18.11.06_12.40.25','18.11.06_13.22.34', '18.11.06_16.59.16', '18.11.07_08.48.47', ...
+%   '18.11.07_14.31.56', '18.11.07_15.21.42',  '18.11.07_22.54.59', '18.11.08_10.47.28', ...
+%  '18.11.08_12.28.25',    ...
+%  '18.11.09_10.47.47', '18.11.09_14.23.40','18.11.10_19.25.41', ...
+% '18.11.14_08.59.51' }; % training with cloud
+
+% file_list = {'18.12.09_11.03.28','18.11.05_15.38.44','18.12.10_11.15.50','18.12.11_14.20.50',...
 %     '18.12.12_08.54.52','18.12.13_10.38.23','18.12.13_16.45.02'}; %Noa's experiment
    
 % file_list = {'18.12.03_10.50.01','18.12.03_12.04.58','18.12.03_13.17.40','18.12.03_14.27.31','18.12.03_15.36.39',...
@@ -57,7 +70,12 @@ if devide_analysis_hours
     T = T( T.to_analyze, :);
 end 
     
-
+%% delete later!
+for i=1: height(T)
+    if ~isempty(T.attencloud{i}) && T.attencloud{i} > 0
+        T.cue_type{i} = [T.cue_type{i}, 'Cloud'];
+    end 
+end 
 %% create summary table and 2 plots:
 data_set=struct();
 
@@ -202,13 +220,15 @@ for day = unique(T.date)'
         
         % plot sucess rate by attenuation for cue in cloud protocol:
         
-        if ismember('attencloud', T_animal.Properties.VariableNames) 
+        if ismember('attencloud', T_animal.Properties.VariableNames) && ...
+                (~isempty(cell2mat(T_animal.attencloud)))
+            cloud_inds  =  ~(cellfun(@isempty,T_animal.attencloud));
             figure(F.success_attenuation_figure)
            [atten_groups, IDatten] = findgroups (cell2mat(T_animal.attencloud));
            
-           %subplot_value = ((animal_i-1)*length(unique(T_presence.date)))+day_ind;
-            visits_atten = splitapply (@length, T_animal.RFID, atten_groups);
-            success_atten =  splitapply((@(r) sum(strcmp(r,'correct'))),T_animal.trial_result, atten_groups);
+            %subplot_value = ((animal_i-1)*length(unique(T_presence.date)))+day_ind;
+            visits_atten = splitapply (@length, T_animal.RFID(cloud_inds), atten_groups);
+            success_atten =  splitapply((@(r) sum(strcmp(r,'correct'))),T_animal.trial_result(cloud_inds), atten_groups);
             success_atten = success_atten./visits_atten;
             atten_H(subplot_value) = subplot(sum(animalsID>0), length(unique(T.date)),  subplot_value);
             hold on
