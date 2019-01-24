@@ -39,22 +39,28 @@ load('C:\Users\owner\Documents\Bpod Local\Protocols\CueInCloud\cue.mat');
 
 filtered_cloud = filtered_cloud - min(filtered_cloud);
 filtered_cloud = filtered_cloud / max(filtered_cloud);% make it between 0-1
+cloud_scale = 0.5; % between 0-5
+filtered_cloud = filtered_cloud * cloud_scale;
 
-attenuations = [0.25, 0.5, 1, 2, 3.5, 5];
+
+attenuations = [0.25, 0.5, 1, 2, 5];
 cuemat = attenuations'*cue;
 
 for i=1:length(attenuations)
-    A.loadWaveform(i, cuemat(i,:)); % the cou, for now only one with 6 attenuations...
+    A.loadWaveform(i, cuemat(i,:)); % the cue, for now only one with 6 attenuations...
 end
 A.loadWaveform((length(attenuations)+1), filtered_cloud); % the cloud - 0-1 V
 
-%load serial messages - play cloud in 6 attenuations on channel 2
-%(messages 1-6), play cloud on channel 1 (message 7)
-LoadSerialMessages('WavePlayer1', {['P',1,0],['P',1,1],['P',1,2],['P',1,3]...
-    ,['P',1,4],['P',1,5],['P',2,6],['S']});
+%load serial messages - play cue in 5 attenuations on channel 1
+%(messages 1-5), play cloud on channel 2 (message 6)
+LoadSerialMessages('WavePlayer1', {['P',1,0], ['P',1,1],['P',1,2],['P',1,3]...
+    ,['P',1,4],['P',2,5] , ['S']});
 %%
 % Loading the sequences to the data so it would be saved for later
 % analysis.
+
+BpodSystem.Path.DataFolder  = '\\132.64.104.28\citri-lab\noa.rivlin\bpod_results\cage_1\data';
+ 
 BpodSystem.Data=struct;
 BpodSystem.Data.cloud = filtered_cloud;
 BpodSystem.Data.cue = cue;
@@ -62,7 +68,7 @@ BpodSystem.Data.cue = cue;
 % define where to save the data from this experiment.
 formatOut = 'yy.mm.dd_HH.MM.SS';
 folder_name = datestr(now,formatOut);
-ExperimentFolder= fullfile(BpodSystem.Path.DataFolder,folder_name);
+ExperimentFolder = fullfile(BpodSystem.Path.DataFolder,folder_name);
 if ~exist(ExperimentFolder)
     mkdir(ExperimentFolder);
 end
@@ -70,7 +76,7 @@ mkdir(fullfile(BpodSystem.Path.DataFolder,folder_name,'Session Data'))
 mkdir(fullfile(BpodSystem.Path.DataFolder,folder_name,'Session Settings'))
 FileName = [folder_name '.mat'];
 DataFolder = fullfile(BpodSystem.Path.DataFolder,folder_name,'Session Data');
-BpodSystem.Path.DataFolder=ExperimentFolder;
+BpodSystem.Path.DataFolder = ExperimentFolder;
 
 % initiate parameters in the Bpood object.
 BpodSystem.Status.Live = 1;

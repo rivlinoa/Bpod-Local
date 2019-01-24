@@ -20,6 +20,8 @@ if isempty(BpodSystem)
 end
 switch Opstring
     case 'Start'
+        BpodSystem.Path.DataFolder  = '\\132.64.104.28\citri-lab\noa.rivlin\bpod_results\cage_1\data';
+ 
         BpodSystem.Data=struct;
         % Make standard folders for this experiment.  This will fail silently if the folders exist
         % define where to save the data from this experiment.
