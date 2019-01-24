@@ -30,7 +30,7 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.DifficultyProb = 1;% Between 0-1, the proportion of easy trials (bottom 2 attenuations). 
     
 end
-S.GUI.Atten_n = 6;% Number of attenuations, don't chnage!! 
+S.GUI.Atten_n = 5;% Number of attenuations, don't chnage!! 
 if ~isfield(BpodSystem.GUIData,'ParameterGUI')
     BpodParameterGUI('init', S);
 end
@@ -59,7 +59,7 @@ if rand(1) <= S.GUI.CloudProb
     else
         cue_atten = randi(S.GUI.Atten_n);
     end 
-    CloudAction = {'WavePlayer1', (S.GUI.Atten_n +1)}; % deliver sound stimulus..
+    CloudAction = {'WavePlayer1', (S.GUI.Atten_n + 1)}; % deliver sound stimulus..
     
     if rand(1) <= S.GUI.LightCloudProb
         CueAction = {'WavePlayer1', cue_atten ,'PWM1', 255 }; % deliver cue stimulus + led on.

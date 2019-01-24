@@ -58,6 +58,9 @@ LoadSerialMessages('WavePlayer1', {['P',2,0],['P',2,1],['P',2,2],['P',2,3]...
 %%
 % Loading the sequences to the data so it would be saved for later
 % analysis.
+
+BpodSystem.Path.DataFolder  = '\\132.64.104.28\citri-lab\noa.rivlin\bpod_results\cage_1\data';
+ 
 BpodSystem.Data=struct;
 BpodSystem.Data.cloud = stim;
 BpodSystem.Data.cue = cue;
