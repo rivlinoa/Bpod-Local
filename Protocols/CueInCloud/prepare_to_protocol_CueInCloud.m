@@ -3,7 +3,7 @@
 
 function PREPARE_TO_PROTOCOL_CUEINCLOUD creates all files needed for data saving,
 and initiates the Bpod object.
-it also loads thw waveplayer with the cloud and cue signal to be played.
+it also loads the waveplayer with the cloud and cue signal to be played.
 
 ----------------------------------------------------------------------------
 % Created by Noa, 21.6.18,
@@ -29,28 +29,32 @@ A = BpodWavePlayer(WavePlayerUSB);
 
 
 % Program sound server
-A.SamplingRate = 50000; % max in 4 ch configurationn.
+A.SamplingRate = 50000;                                                    % max in 4 ch configurationn.
 SF = A.SamplingRate;
 A.BpodEvents = {'On','On','On','On'};
 A.TriggerMode = 'Master';
 A.OutputRange = '0V:5V';
-load('C:\Users\owner\Documents\Bpod Local\Protocols\CueInCloud\cloud.mat');
+load('C:\Users\owner\Documents\Bpod Local\Protocols\CueInCloud\filtered_cloud.mat');
 load('C:\Users\owner\Documents\Bpod Local\Protocols\CueInCloud\cue.mat');
-cue = cue.*5.*0.99; % maximal rage in 0-5v outputrange
-stim = stim.*(5).*0.99;% maximal rage in 0-5v outputrange
+cue = cue.*5.*0.99;                                                        % maximal rage in 0-5v outputrange
+filtered_cloud = filtered_cloud.*(5).*0.99;                                                    % maximal rage in 0-5v outputrange
+t = [0:(1/SF):0.5];                                                        % used dfor the BBN creation
+BBN =  wgn(1,length(t),1);                                                 % BBN creation
+BBN = BBN + abs(min(BBN));
+BBN = (BBN / max(BBN)) * 2.5 * 0.99;                                       % scale BBN to be at output range of 0-5 (specificallt 2.5)
 
 attenuations = logspace(-0.2,1,6);
-cloudmat = attenuations'*stim.*0.1;
-
+cloudmat = attenuations'*filtered_cloud.*0.1;
 for i=1:length(attenuations)
     A.loadWaveform(i, cloudmat(i,:)); % the cloud, for now only one with 10 attenuations...
 end
 A.loadWaveform((length(attenuations)+1), cue); % the cue - maximal volume
-
+A.loadWaveform((length(attenuations)+2), BBN); % BBN entry signal
 %load serial messages - play cloud in 6 attenuations on channel 2
-%(messages 1-6), play cue on channel 1 (message 7)
+%(messages 1-6), play cue on channel 1 (message 7), play BBN chan 1
+%(message 8)
 LoadSerialMessages('WavePlayer1', {['P',2,0],['P',2,1],['P',2,2],['P',2,3]...
-    ,['P',2,4],['P',2,5],['P',1,6],['S']});
+    ,['P',2,4],['P',2,5],['P',1,6],['P',1,7], ['S']});
 %%
 % Loading the sequences to the data so it would be saved for later
 % analysis.

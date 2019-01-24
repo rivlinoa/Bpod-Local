@@ -5,9 +5,11 @@ function PREPARE_TO_PROTOCOL_CUEINFIXCLOUD creates all files needed for data sav
 and initiates the Bpod object.
 it also loads thw waveplayer with the cloud and cue signal to be played.
 
+
+% add input as the cue file !!!! 
 ----------------------------------------------------------------------------
 % Created by Noa, 21.6.18,
-% Eddited 3.10.18
+% Eddited 23.12.18
 %}
 
 
@@ -35,10 +37,13 @@ A.BpodEvents = {'On','On','On','On'};
 A.TriggerMode = 'Master';
 A.OutputRange = '0V:5V';
 load('C:\Users\Owner\Documents\Bpod Local\Protocols\CueInCloud\filtered_cloud.mat');
-load('C:\Users\owner\Documents\Bpod Local\Protocols\CueInCloud\cue.mat');
-
+% load('C:\Users\owner\Documents\Bpod Local\Protocols\CueInCloud\cue.mat'); % for the 4 khz rig!!!
+load('C:\Users\owner\Documents\Bpod Local\Protocols\CueInFixCloud\cue6khz.mat') % for the 6 khz cage!!!
+% make the cue and the cloud between 0-1:
 filtered_cloud = filtered_cloud - min(filtered_cloud);
 filtered_cloud = filtered_cloud / max(filtered_cloud);% make it between 0-1
+cue = cue - min(cue);
+cue = cue / max(cue);
 
 attenuations = [0.25, 0.5, 1, 2, 3.5, 5];
 cuemat = attenuations'*cue;
@@ -48,10 +53,17 @@ for i=1:length(attenuations)
 end
 A.loadWaveform((length(attenuations)+1), filtered_cloud); % the cloud - 0-1 V
 
+t = [0:(1/SF):0.5]; 
+BBN =  wgn(1,length(t),1);                                                 % BBN creation
+BBN = BBN + abs(min(BBN));
+BBN = (BBN / max(BBN)) * 1 * 0.99;
+A.loadWaveform((length(attenuations)+2), BBN); % BBN entry signal
 %load serial messages - play cloud in 6 attenuations on channel 2
-%(messages 1-6), play cloud on channel 1 (message 7)
+%(messages 1-6), play cue on channel 1 (message 7), play BBN chan 1
+%(message 8)
+
 LoadSerialMessages('WavePlayer1', {['P',1,0],['P',1,1],['P',1,2],['P',1,3]...
-    ,['P',1,4],['P',1,5],['P',2,6],['S']});
+    ,['P',1,4],['P',1,5],['P',2,6], ['P', 2, 7], ['S']});
 %%
 % Loading the sequences to the data so it would be saved for later
 % analysis.
