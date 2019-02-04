@@ -34,14 +34,22 @@ SF = A.SamplingRate;
 A.BpodEvents = {'On','On','On','On'};
 A.TriggerMode = 'Master';
 A.OutputRange = '0V:5V';
-load('C:\Users\Owner\Documents\Bpod Local\Protocols\CueInCloud\filtered_cloud.mat');
-load('C:\Users\owner\Documents\Bpod Local\Protocols\CueInCloud\cue.mat');
-
+load('C:\Users\Owner\Documents\Stimuli\filtered_cloud.mat');               % load it from a non-git folder. chnges would be only local!
+load('C:\Users\Owner\Documents\Stimuli\cue.mat')
+cue = cue - min(cue);
+cue = cue / max(cue);
+                                                                         
 filtered_cloud = filtered_cloud - min(filtered_cloud);
-filtered_cloud = filtered_cloud / max(filtered_cloud);% make it between 0-1
-cloud_scale = 0.5; % between 0-5
+filtered_cloud = filtered_cloud / max(filtered_cloud);
+                                                                         
+% you can change this value to control the cloud attenuation 
+cloud_scale = 0.5;                                                         % between 0-5
 filtered_cloud = filtered_cloud * cloud_scale;
 
+t = [0:(1/SF):0.5];                                                        % used for the BBN creation
+BBN =  wgn(1,length(t),1);                                                 % BBN creation
+BBN = BBN + abs(min(BBN));
+BBN = (BBN / max(BBN)) * 2.5 * 0.99;
 
 attenuations = [0.25, 0.5, 1, 2, 5];
 cuemat = attenuations'*cue;
@@ -50,11 +58,12 @@ for i=1:length(attenuations)
     A.loadWaveform(i, cuemat(i,:)); % the cue, for now only one with 6 attenuations...
 end
 A.loadWaveform((length(attenuations)+1), filtered_cloud); % the cloud - 0-1 V
+A.loadWaveform((length(attenuations)+2), BBN); % the cloud - 0-1 V
 
 %load serial messages - play cue in 5 attenuations on channel 1
 %(messages 1-5), play cloud on channel 2 (message 6)
 LoadSerialMessages('WavePlayer1', {['P',1,0], ['P',1,1],['P',1,2],['P',1,3]...
-    ,['P',1,4],['P',2,5] , ['S']});
+    ,['P',1,4],['P',2,5] , ['P',2,6], ['S']});
 %%
 % Loading the sequences to the data so it would be saved for later
 % analysis.

@@ -34,10 +34,15 @@ SF = A.SamplingRate;
 A.BpodEvents = {'On','On','On','On'};
 A.TriggerMode = 'Master';
 A.OutputRange = '0V:5V';
-load('C:\Users\owner\Documents\Bpod Local\Protocols\CueInCloud\filtered_cloud.mat');
-load('C:\Users\owner\Documents\Bpod Local\Protocols\CueInCloud\cue.mat');
+load('C:\Users\Owner\Documents\Stimuli\filtered_cloud.mat');               % load it from a non-git folder. chnges would be only local!
+load('C:\Users\Owner\Documents\Stimuli\cue.mat')
+cue = cue - min(cue);
+cue = cue / max(cue);
 cue = cue.*5.*0.99;                                                        % maximal rage in 0-5v outputrange
-filtered_cloud = filtered_cloud.*(5).*0.99;                                                    % maximal rage in 0-5v outputrange
+filtered_cloud = filtered_cloud - min(filtered_cloud);
+filtered_cloud = filtered_cloud / max(filtered_cloud);
+filtered_cloud = filtered_cloud.*(5).*0.99;                                % maximal rage in 0-5v outputrange
+
 t = [0:(1/SF):0.5];                                                        % used dfor the BBN creation
 BBN =  wgn(1,length(t),1);                                                 % BBN creation
 BBN = BBN + abs(min(BBN));
@@ -61,7 +66,7 @@ LoadSerialMessages('WavePlayer1', {['P',2,0],['P',2,1],['P',2,2],['P',2,3]...
 BpodSystem.Path.DataFolder  = '\\132.64.104.28\citri-lab\noa.rivlin\bpod_results\cage_1\data';
  
 BpodSystem.Data=struct;
-BpodSystem.Data.cloud = stim;
+BpodSystem.Data.cloud = filtered_cloud;
 BpodSystem.Data.cue = cue;
 % Make standard folders for this experiment.  This will fail silently if the folders exist
 % define where to save the data from this experiment.
