@@ -38,10 +38,15 @@ load('C:\Users\Owner\Documents\Stimuli\filtered_cloud.mat');               % loa
 load('C:\Users\Owner\Documents\Stimuli\cue.mat')
 cue = cue - min(cue);
 cue = cue / max(cue);
-cue = cue.*5.*0.99;                                                        % maximal rage in 0-5v outputrange
+cue = cue.*0.99;
+
+cue_scale = 0.5;                                                         % between 0-5
+cue = cue * cue_scale;
+
+% maximal rage in 0-5v outputrange
 filtered_cloud = filtered_cloud - min(filtered_cloud);
 filtered_cloud = filtered_cloud / max(filtered_cloud);
-filtered_cloud = filtered_cloud.*(5).*0.99;                                % maximal rage in 0-5v outputrange
+filtered_cloud = filtered_cloud.*0.99;                                % maximal rage in 0-5v outputrange
 
 t = [0:(1/SF):0.5];                                                        % used dfor the BBN creation
 BBN =  wgn(1,length(t),1);                                                 % BBN creation
@@ -63,7 +68,7 @@ LoadSerialMessages('WavePlayer1', {['P',2,0],['P',2,1],['P',2,2],['P',2,3]...
 %%
 % Loading the sequences to the data so it would be saved for later
 % analysis.
-BpodSystem.Path.DataFolder  = '\\132.64.104.28\citri-lab\noa.rivlin\bpod_results\cage_1\data';
+BpodSystem.Path.DataFolder  = '\\132.64.104.28\citri-lab\noa.rivlin\bpod_results\cage_3\data';
  
 BpodSystem.Data=struct;
 BpodSystem.Data.cloud = filtered_cloud;
