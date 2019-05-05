@@ -27,7 +27,7 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.LightProb = 1; % Between 0-1, fraction of trials that would have auditory+visual stimulus.  
     S.GUI.CloudProb = 0.5; % Between 0-1, fraction of trials that would have tone cloud during delay . 
     S.GUI.LightCloudProb = 1; % prob of light in cloud trials
-    S.GUI.DifficultyProb = 0.1;% Between 0-1, the proportion of easy trials (bottom 2 attenuations). 
+    S.GUI.DifficultyProb = 0.1;% Between 0-1, the proportion of *easy* trials (1 max attenuations). 
     
 end
 S.GUI.Atten_n = 5;% Number of attenuations, don't chnage!! 
@@ -38,7 +38,11 @@ end
 
 %% Define trials
 %decide what is the cue type based on light probability for no cloud condition 
-cue_atten = randi (S.GUI.Atten_n);  % will be changed later in the cloud settings 
+if rand(1) <= S.GUI.DifficultyProb
+        cue_atten = S.GUI.Atten_n; % The maximal (easiest attenuation)
+else
+        cue_atten = randi(S.GUI.Atten_n); % Random from all possible attenuations
+end  
 
 if rand(1) <= S.GUI.LightProb
     CueAction = {'WavePlayer1', cue_atten,'PWM1', 255 }; % deliver cue stimulus + led on.
@@ -54,11 +58,6 @@ CloudAction = {};
 if rand(1) <= S.GUI.CloudProb
     % set the cloud attenuation (1-10) base on difficulty probability
     attencloud = 1;
-    if rand(1) <= S.GUI.DifficultyProb
-        cue_atten = randi(2)+ S.GUI.Atten_n - 2;
-    else
-        cue_atten = randi(S.GUI.Atten_n);
-    end 
     CloudAction = {'WavePlayer1', (S.GUI.Atten_n +1)}; % deliver sound stimulus..
     
     if rand(1) <= S.GUI.LightCloudProb
