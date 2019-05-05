@@ -26,7 +26,7 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.LightProb = 1; % Between 0-1, fraction of trials that would have auditory+visual stimulus.  
     S.GUI.CloudProb = 1; % Between 0-1, fraction of trials that would have tone cloud during delay . 
     S.GUI.LightCloudProb = 1; % prob of light in cloud trials
-    S.GUI.DifficultyProb = 1;% Between 0-1, the proportion of easy trials (bottom 2 attenuations). 
+    S.GUI.DifficultyProb = 0.1;% Between 0-1, the proportion of easy trials (bottom 2 attenuations). 
     
 end
 S.GUI.Atten_n = 6;% Number of attenuations, don't chnage!! 
