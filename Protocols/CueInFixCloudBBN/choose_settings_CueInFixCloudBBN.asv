@@ -7,13 +7,14 @@ the user can use the relevant animals file to decide what the settings are:
 %}
 
 function [settings] = choose_settings_CueInFixCloudBBN(tag)
-settings='Aud0.5_delay0.5-1'; 
+settings='20.9.18_default'; 
 switch tag
     case '180900001405' % mouse 11
-        settings = 'Aud0.5_delay0.5-1';
-    case '18090000CCDD' % mouse 12
-         settings = 'Stage_3c' ;
-  
+        settings = 'Stage_2';
+     case '18090000CCDD' % mouse 12
+         settings = 'AudVis0.5Delay' ;
+ 
+ 
 end 
     
 end 
