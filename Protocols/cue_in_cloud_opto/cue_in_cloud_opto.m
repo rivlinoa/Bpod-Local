@@ -39,13 +39,17 @@ function cue_in_cloud_opto
     W.OutputRange = '0V:5V';                                                                % maximal rage in 0-5v outputrange
     W.TriggerProfileEnable = 'On';
     
-    load('C:\Users\owner\Documents\Bpod Local\Protocols\CueInCloud\filtered_cloud.mat');    % change in the annex!
-    load('C:\Users\owner\Documents\Bpod Local\Protocols\CueInCloud\cue.mat');               % change in the annex!
+    load('C:\Users\Owner\Documents\Stimuli\filtered_cloud.mat');    
+    load('C:\Users\Owner\Documents\Stimuli\cue.mat');              
     load ('C:\Users\owner\Documents\Bpod Local\Protocols\cue_in_cloud_opto\stimulation.mat');
-    cue = cue.*5.*0.99;                                                                     % change in the annex!
-    filtered_cloud =  (filtered_cloud - min(filtered_cloud));
-    filtered_cloud = filtered_cloud / max(abs(filtered_cloud));
-    filtered_cloud = filtered_cloud.*(5).*0.99;                                             % change in the annex!
+                                                                         
+    filtered_cloud = filtered_cloud - min(filtered_cloud);
+    filtered_cloud = filtered_cloud / max(filtered_cloud);
+    filtered_cloud = filtered_cloud.*0.99.*0.5;
+    cue = cue - min(cue);
+    cue = cue / max(cue);
+    cue = cue.*0.99;
+                                             
     stimulation = stimulation.*(5).*0.99; 
     
     W.loadWaveform(1, cue)
