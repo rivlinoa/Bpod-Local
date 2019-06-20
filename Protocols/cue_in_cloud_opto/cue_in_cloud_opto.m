@@ -119,16 +119,20 @@ function cue_in_cloud_opto
             end 
             
             if i > 1
+                
+                BpodSystem.Data = AddTrialEvents(BpodSystem.Data,RawEvents); % Computes trial events from raw data
+                                
                 if tmp.laser
                     BpodSystem.GUIData.bar.visit_count(1) = BpodSystem.GUIData.bar.visit_count(1) + 1;
-                    % if correct
-                    BpodSystem.GUIData.bar.correct_count(1) = BpodSystem.GUIData.bar.correct_count(1) + 1;
-                    %end
+                    if ~ isnan(BpodSystem.Data.RawEvents.Trial{1, 1}.States.Reward(1))
+                         BpodSystem.GUIData.bar.correct_count(1) = BpodSystem.GUIData.bar.correct_count(1) + 1;
+                    end
+                    
                 else
                     BpodSystem.GUIData.bar.visit_count(2) = BpodSystem.GUIData.bar.visit_count(2) + 1;
-                    % if correct
-                    BpodSystem.GUIData.bar.correct_count(2) = BpodSystem.GUIData.bar.correct_count(2) + 1;
-                    %end
+                    if ~ isnan(BpodSystem.Data.RawEvents.Trial{1, 1}.States.Reward(1))
+                         BpodSystem.GUIData.bar.correct_count(2) = BpodSystem.GUIData.bar.correct_count(2) + 1;
+                    end
                 end 
                 BpodSystem.GUIData.bar.success = BpodSystem.GUIData.bar.correct_count ./...
                                                      BpodSystem.GUIData.bar.visit_count;
@@ -136,15 +140,18 @@ function cue_in_cloud_opto
                     BpodSystem.GUIData.bar.success);
                 BpodSystem.GUIHandles.h_ax.Title.String = [ num2str(i-1), '  Visits'];
                 drawnow();
-               
-            
-                BpodSystem.Data = AddTrialEvents(BpodSystem.Data,RawEvents); % Computes trial events from raw data
+                
                 BpodSystem.Data.Delay{i-1} = tmp.delay;
                 BpodSystem.Data.attencloud{i-1} = tmp.attencloud;
                 BpodSystem.Data.CueTypes{i-1} = p.Cuetype;
                 BpodSystem.Data.ResponseDuration(i-1) = p.response;
                 BpodSystem.Data.Laser(i-1) = p.laser;
                 BpodSystem.Data.RFID{i-1} = tag;
+                if ~ isnan(BpodSystem.Data.RawEvents.Trial{1, 1}.States.Reward(1))
+                    BpodSystem.Data.reward_supplied(i-1) = S.GUI.RewardAmount;
+                else
+                    BpodSystem.Data.reward_supplied(i-1) = 0;
+                end
                 SaveBpodSessionData;
             end         
            
