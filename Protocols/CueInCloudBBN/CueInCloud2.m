@@ -1,10 +1,9 @@
 %{
-%% CueInFixCloud
-Following entry a tone cloud is played (or not, with some probability), in a fixed attenuations
-0 attenuation in the data coresponds to no cloud. 
+%% CueInCloud2
+Following entry a tone cloud is played (or not, with some probability), in one of 10 attenuations
+(logathimically spaced). 0 attenuation in the data coresponds to no cloud. 
 After a random delay (default max 1 sec), a cue is
-played in a second speaker in 1 out of 6 attenuations. Cue is auditory or auditory 
-+ visual with some probability.
+played in a second speaker. Cue is auditory or auditory + visual with some probability.
 Bpod supplies reward for the first nosepoke in the port (default 10 ul) when the cue is active.
 If there i a premature nosepoke the que will not be played, though the
 cloud (3 sec long) will not be stopped. 
@@ -13,7 +12,7 @@ port 1 is active, port 4 is presence detection.
 * currently while drinking is stops the cloud. 
 %}
 
-function CueInFixCloudBBN
+function CueInCloud2
 
 global BpodSystem
 
@@ -25,12 +24,12 @@ if isempty(fieldnames(S))  % If settings file was an empty struct, populate stru
     S.GUI.MaxDelay = 2; % sec
     S.GUI.MinDelay = 0.5; % sec
     S.GUI.LightProb = 1; % Between 0-1, fraction of trials that would have auditory+visual stimulus.  
-    S.GUI.CloudProb = 0.5; % Between 0-1, fraction of trials that would have tone cloud during delay . 
+    S.GUI.CloudProb = 1; % Between 0-1, fraction of trials that would have tone cloud during delay . 
     S.GUI.LightCloudProb = 1; % prob of light in cloud trials
-    S.GUI.DifficultyProb = 0.1;% Between 0-1, the proportion of *easy* trials (1 max attenuations). 
+    S.GUI.DifficultyProb = 1;% Between 0-1, the proportion of easy trials (bottom 2 attenuations). 
     
 end
-S.GUI.Atten_n = 5;% Number of attenuations, don't chnage!! 
+S.GUI.Atten_n = 6;% Number of attenuations, don't chnage!! 
 if ~isfield(BpodSystem.GUIData,'ParameterGUI')
     BpodParameterGUI('init', S);
 end
@@ -38,39 +37,40 @@ end
 
 %% Define trials
 %decide what is the cue type based on light probability for no cloud condition 
-if rand(1) <= S.GUI.DifficultyProb
-        cue_atten = S.GUI.Atten_n; % The maximal (easiest attenuation)
-else
-        cue_atten = randi(S.GUI.Atten_n); % Random from all possible attenuations
-end  
-
 if rand(1) <= S.GUI.LightProb
-    CueAction = {'WavePlayer1', cue_atten,'PWM1', 255 }; % deliver cue stimulus + led on.
+    CueAction = {'WavePlayer1', (S.GUI.Atten_n+1),'PWM1', 255 }; % deliver cue stimulus + led on.
     Cuetype = 'AudVis';
 else 
-    CueAction = {'WavePlayer1', cue_atten}; % deliver cue stimulus on channel 1
+    CueAction = {'WavePlayer1', (S.GUI.Atten_n+1)};% deliver cue stimulus on channel 1
     Cuetype = 'Aud';
 end
-attencloud = 0; % no cloud
+attencloud = 0; %no cloud
 CloudAction = {};
 
 % decide if to have a cloud at all based on cloud probability
 if rand(1) <= S.GUI.CloudProb
     % set the cloud attenuation (1-10) base on difficulty probability
     attencloud = 1;
-    CloudAction = {'WavePlayer1', (S.GUI.Atten_n +1)}; % deliver sound stimulus..
+    if rand(1) <= S.GUI.DifficultyProb
+        attencloud = randi(2);
+    else
+        attencloud = randi(S.GUI.Atten_n);
+    end 
+    CloudAction = {'WavePlayer1', attencloud}; % deliver sound stimulus..
     
     if rand(1) <= S.GUI.LightCloudProb
-        CueAction = {'WavePlayer1', cue_atten ,'PWM1', 255 }; % deliver cue stimulus + led on.
+        CueAction = {'WavePlayer1', (S.GUI.Atten_n+1),'PWM1', 255 }; % deliver cue stimulus + led on.
         Cuetype = 'AudVisCloud';
     else
-        CueAction = {'WavePlayer1', cue_atten }; % deliver cue stimulus 
+        CueAction = {'WavePlayer1', (S.GUI.Atten_n+1) }; % deliver cue stimulus + led on.
         Cuetype = 'AudCloud';
     end
 
 end 
 
-BBN_action = {'WavePlayer1', (S.GUI.Atten_n + 2) };
+
+
+%StopAction = {'WavePlayer1', 12};
 
 % define the delay
 Delay = S.GUI.MinDelay + rand()*(S.GUI.MaxDelay-S.GUI.MinDelay);
@@ -80,10 +80,6 @@ Delay = S.GUI.MinDelay + rand()*(S.GUI.MaxDelay-S.GUI.MinDelay);
 R = GetValveTimes(S.GUI.RewardAmount, 1 ); ValveTime = R; % Update reward amounts
 sma = NewStateMatrix(); % Assemble state matrix
 
-sma = AddState(sma, 'Name', 'BBN', ...
-    'Timer', 0.5,...
-    'StateChangeConditions', {'Port1In','WaitForExit', 'Tup', 'Delay'},...
-    'OutputActions', BBN_action);
 sma = AddState(sma, 'Name', 'Delay', ...
     'Timer', Delay,...
     'StateChangeConditions', {'Port1In','WaitForExit', 'Tup', 'CueOn'},...
@@ -118,7 +114,6 @@ end
     % save trial type into data (important whene randomizing...):
     BpodSystem.Data.Delay{trial_number} = Delay;
     BpodSystem.Data.attencloud{trial_number} = attencloud;
-    BpodSystem.Data.cue_atten{trial_number} = cue_atten;
     BpodSystem.Data.CueTypes{trial_number} = Cuetype;
     BpodSystem.Data.ResponseDuration(trial_number) = S.GUI.ResponseDuration;
     
