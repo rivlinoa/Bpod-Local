@@ -40,7 +40,7 @@ function cue_in_cloud_consule
     
     % initiations :
     global RFID
-    RFID = serial('COM17');
+    RFID = serial('COM4');
     
     
     %% load the wave player 
@@ -136,7 +136,10 @@ function cue_in_cloud_consule
             p = define_trial(subject_settings);                            % define parameters for the coming trial: 
             sma = prepare_sma(p);                                          % Prepare next trial's state machine   
             p.RFID = BpodSystem.Status.tmp_rf;                             % the current animal that was read. 
-            if BpodSystem.Status.BeingUsed == 0; return; end               % If user hit console "stop" button, end session 
+            if BpodSystem.Status.BeingUsed == 0;
+                clear 
+                return; 
+            end               % If user hit console "stop" button, end session 
             T.startTrial(sma);                                             % run the state machine
             
             %%% inside the state machine: sent a soft code to start read_rf 
@@ -150,6 +153,7 @@ function cue_in_cloud_consule
                 animal_ind = strcmp(settings.tags, tmp.RFID);
                 is_success = 0;
                 reward = 0;
+                
                 if ~ isnan(BpodSystem.Data.RawEvents.Trial{1, (i-1)}.States.Reward (1))
                     is_success = 1;
                     reward = tmp.reward;
@@ -157,12 +161,13 @@ function cue_in_cloud_consule
                 update_graphs(animal_ind, is_success, reward)
               
                 % save data :           
-                
+                BpodSystem.Data.reward_supplied(i-1) = reward;
                 BpodSystem.Data.Delay{i-1} = tmp.delay;
                 BpodSystem.Data.attencloud{i-1} = tmp.attencloud;
                 BpodSystem.Data.CueTypes{i-1} = p.Cuetype;
                 BpodSystem.Data.ResponseDuration(i-1) = p.response;
                 BpodSystem.Data.RFID{i-1} = tmp.RFID;
+                BpodSystem.Data.settings{i-1} = subject_settings; 
                 SaveBpodSessionData;
                                       
             end         
