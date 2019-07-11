@@ -40,7 +40,7 @@ function cue_in_cloud_consule
     
     % initiations :
     global RFID
-    RFID = serial('COM4');
+    RFID = serial('COM17');
     
     
     %% load the wave player 
@@ -68,8 +68,8 @@ function cue_in_cloud_consule
     
     cue_attenuations = [0.2, 0.5, 1, 2]';                                  % change in the annex!
     cue_mat = cue_attenuations * cue;
-    BBN_LENGTH = 0.1;
-    t = [0:(1/SF):BBN_LENGTH];                                                    % used for the BBN creation
+    
+    t = [0:(1/SF):0.5];                                                    % used for the BBN creation
     BBN =  wgn(1,length(t),1);                                             % BBN creation
     BBN = BBN + abs(min(BBN));
     BBN = (BBN / max(BBN)) * 1.5 * 0.99;                                   % scale BBN to be at output range of 0-5 
@@ -136,10 +136,7 @@ function cue_in_cloud_consule
             p = define_trial(subject_settings);                            % define parameters for the coming trial: 
             sma = prepare_sma(p);                                          % Prepare next trial's state machine   
             p.RFID = BpodSystem.Status.tmp_rf;                             % the current animal that was read. 
-            if BpodSystem.Status.BeingUsed == 0;
-                clear 
-                return; 
-            end               % If user hit console "stop" button, end session 
+            if BpodSystem.Status.BeingUsed == 0; return; end               % If user hit console "stop" button, end session 
             T.startTrial(sma);                                             % run the state machine
             
             %%% inside the state machine: sent a soft code to start read_rf 
@@ -153,7 +150,6 @@ function cue_in_cloud_consule
                 animal_ind = strcmp(settings.tags, tmp.RFID);
                 is_success = 0;
                 reward = 0;
-                
                 if ~ isnan(BpodSystem.Data.RawEvents.Trial{1, (i-1)}.States.Reward (1))
                     is_success = 1;
                     reward = tmp.reward;
@@ -161,13 +157,12 @@ function cue_in_cloud_consule
                 update_graphs(animal_ind, is_success, reward)
               
                 % save data :           
-                BpodSystem.Data.reward_supplied(i-1) = reward;
+                
                 BpodSystem.Data.Delay{i-1} = tmp.delay;
                 BpodSystem.Data.attencloud{i-1} = tmp.attencloud;
                 BpodSystem.Data.CueTypes{i-1} = p.Cuetype;
                 BpodSystem.Data.ResponseDuration(i-1) = p.response;
                 BpodSystem.Data.RFID{i-1} = tmp.RFID;
-                BpodSystem.Data.settings{i-1} = subject_settings; 
                 SaveBpodSessionData;
                                       
             end         
@@ -220,7 +215,7 @@ function p = define_trial(S)
     end 
     
     if p.is_bbn
-        p.bbn_timer = 0.1;                                                 % 0.1 sec is the length of the BBN signal. change it if its changed. 
+        p.bbn_timer = 0.5;                                                 % 0.5 sec is the length of the BBN signal. change it if its changed. 
         p.bbn_action = {'WavePlayer1', 6};
     else
         p.bbn_timer = 0.001;

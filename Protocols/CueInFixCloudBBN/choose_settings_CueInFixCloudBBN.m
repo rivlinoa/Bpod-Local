@@ -7,13 +7,22 @@ the user can use the relevant animals file to decide what the settings are:
 %}
 
 function [settings] = choose_settings_CueInFixCloudBBN(tag)
-settings='Stage_2'; 
+settings='Stage4'; 
 switch tag
-   case '180900001405' % mouse 11
-        settings = 'AudVis0.5_Aud0.5_delay0.5-1' ;
-   case '18090000CCDD' % mouse 12
-        settings = 'Stage_3c';
- 
+    case '00782B18C388' % mouse 1
+        settings = 'Stage5a';
+    case '00782B188CC7' % mouse 2
+        settings = 'Stage5a';
+    case '180900008899' % mouse 3
+         settings = 'Stage5a' ;
+    case '00782B19C389' % mouse 4
+        settings = 'Stage5a';
+    case '00782B1982C8' % mouse 6
+        settings = 'Stage5a' ;
+    case '00782B1890DB' % mouse 5
+        settings = 'Stage_5c';
+    case '180900000716' % mouse 7
+        settings = 'Stage_5c';
 end 
     
 end 
