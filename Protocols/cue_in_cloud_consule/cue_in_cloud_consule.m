@@ -4,7 +4,8 @@ function cue_in_cloud_consule
 % it is meant to be run through Bpod consule, and incorporate the use of
 % sending and recieving soft codes. 
 % there are 4 possible cue attenuations. 
-
+try
+    disp('start')
 
     % settings:
     global BpodSystem
@@ -40,7 +41,7 @@ function cue_in_cloud_consule
     
     % initiations :
     global RFID
-    RFID = serial('COM4');
+    RFID = serial('COM8');
     
     
     %% load the wave player 
@@ -64,7 +65,7 @@ function cue_in_cloud_consule
     cue = cue.*0.99;                                                                    
     filtered_cloud =  (filtered_cloud - min(filtered_cloud));
     filtered_cloud = filtered_cloud / max(abs(filtered_cloud));
-    filtered_cloud = filtered_cloud.*(2).*0.99;                                            
+    filtered_cloud = filtered_cloud.*(1).*0.99;                                            
     
     cue_attenuations = [0.2, 0.5, 1, 2]';                                  % change in the annex!
     cue_mat = cue_attenuations * cue;
@@ -123,23 +124,25 @@ function cue_in_cloud_consule
 %     BpodSystem.GUIHandles.h_ax.YLim = [0, 1];
     
   %% The main loop   
-    n_trials = 1000;
+    n_trials = 100000;
     T = TrialManagerObject;
-    T.Timer.Period = 0.2;
+    T.Timer.Period = 0.001; %0.22;
     p = struct;
     BpodSystem.Status.tmp_rf = BpodSystem.Data.TESTER_RFID;                % Start a dummy trial with the tester RFID and template settings                                      
-    
+    % disp('loop')
     for i = 1:n_trials
-            
+            disp(datetime('now'));                                         % serves as validation the the experiment is running
             tmp = p;
             subject_settings = load_settings(BpodSystem.Status.tmp_rf, settings);
             p = define_trial(subject_settings);                            % define parameters for the coming trial: 
             sma = prepare_sma(p);                                          % Prepare next trial's state machine   
+            p.subject_settings = subject_settings;
             p.RFID = BpodSystem.Status.tmp_rf;                             % the current animal that was read. 
-            if BpodSystem.Status.BeingUsed == 0;
-                clear 
+            if BpodSystem.Status.BeingUsed == 0
+                
                 return; 
             end               % If user hit console "stop" button, end session 
+            % disp('trial')
             T.startTrial(sma);                                             % run the state machine
             
             %%% inside the state machine: sent a soft code to start read_rf 
@@ -151,6 +154,9 @@ function cue_in_cloud_consule
                 
                 % update online graphics :
                 animal_ind = strcmp(settings.tags, tmp.RFID);
+                if all(~animal_ind)                                          % if there is n unrecognized read mark it as the tester
+                    animal_ind(length(animal_ind)) = 1;
+                end 
                 is_success = 0;
                 reward = 0;
                 
@@ -164,16 +170,23 @@ function cue_in_cloud_consule
                 BpodSystem.Data.reward_supplied(i-1) = reward;
                 BpodSystem.Data.Delay{i-1} = tmp.delay;
                 BpodSystem.Data.attencloud{i-1} = tmp.attencloud;
-                BpodSystem.Data.CueTypes{i-1} = p.Cuetype;
-                BpodSystem.Data.ResponseDuration(i-1) = p.response;
+                BpodSystem.Data.CueTypes{i-1} = tmp.Cuetype;
+                BpodSystem.Data.ResponseDuration(i-1) = tmp.response;
                 BpodSystem.Data.RFID{i-1} = tmp.RFID;
-                BpodSystem.Data.settings{i-1} = subject_settings; 
+                BpodSystem.Data.settings{i-1} = tmp.subject_settings; 
                 SaveBpodSessionData;
                                       
             end         
            RawEvents = T.getTrialData;                         % Hangs here until trial end, then returns the trial's raw data
     end
-
+    
+catch ME
+    mail = 'citrilabbpod@gmail.com';
+    subject = 'Matlab has crashed';
+    message = ME.message;
+    disp(message);
+    %sendmail(mail,subject,message)
+end 
 end 
 
 function p = define_trial(S) 
@@ -189,12 +202,12 @@ function p = define_trial(S)
         
     if current_trial < S.AudVis
                 p.Cuetype = 'AudVis';
-                p.CueAction = {'WavePlayer1', p.cue_atten ,'PWM2', 255 };
+                p.CueAction = {'WavePlayer1', p.cue_atten ,'PWM1', 255 };
                 p.attencloud = 0; 
                 p.CloudAction = {}; 
     elseif current_trial < (S.AudVis + S.AudVisCloud)
                 p.Cuetype = 'AudVisCloud';
-                p.CueAction = {'WavePlayer1', p.cue_atten ,'PWM2', 255 };
+                p.CueAction = {'WavePlayer1', p.cue_atten ,'PWM1', 255 };
                 p.attencloud = 1; 
                 p.CloudAction = {'WavePlayer1', 5};                        % 5 = the cloud
     elseif current_trial < (S.AudVis + S.AudVisCloud + S.Aud)
@@ -275,7 +288,11 @@ end
 function subject_settings = load_settings(tag, settings)
     global BpodSystem
     animal_ind = strcmp(settings.tags, tag);
-    settings_name = settings.settings{animal_ind};
+    if all(~animal_ind)
+        settings_name = 'template';
+    else
+        settings_name = settings.settings{animal_ind};
+    end 
     subject_settings = load([BpodSystem.Path.settings_path, '\', settings_name]);
     tmp = fields(subject_settings);
     subject_settings = subject_settings.(tmp{1});
@@ -297,7 +314,7 @@ function update_graphs(animal_ind, is_success, reward)
     if is_success
       BpodSystem.GUIData.bar.correct_count(animal_ind) = ...
            BpodSystem.GUIData.bar.correct_count(animal_ind) +1; 
-       BpodSystem.GUIData.bar.success = BpodSystem.GUIData.bar.correct_count / ...
+       BpodSystem.GUIData.bar.success = BpodSystem.GUIData.bar.correct_count ./ ...
            BpodSystem.GUIData.bar.visit_count;
        set(BpodSystem.GUIHandles.success_bar, 'ydata', ...
             BpodSystem.GUIData.bar.success);
