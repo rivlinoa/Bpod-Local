@@ -51,7 +51,7 @@ filtered_cloud = filtered_cloud * cloud_scale;
 t = [0:(1/SF):0.5];                                                        % used for the BBN creation
 BBN =  wgn(1,length(t),1);                                                 % BBN creation
 BBN = BBN + abs(min(BBN));
-BBN = (BBN / max(BBN))  * 0.99;
+BBN = (BBN / max(BBN))  * 0.99*0.3;
 
 attenuations = [0.25, 0.5, 1, 2, 5];
 cuemat = attenuations'*cue;

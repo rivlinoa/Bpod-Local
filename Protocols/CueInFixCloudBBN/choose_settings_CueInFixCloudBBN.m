@@ -10,9 +10,9 @@ function [settings] = choose_settings_CueInFixCloudBBN(tag)
 settings='Aud0.5_delay0.5-1'; 
 switch tag
     case '180900001405' % mouse 11
-        settings = 'Aud0.5_delay0.5-1';
+        settings = 'Stage_5b';
     case '18090000CCDD' % mouse 12
-         settings = 'Stage_3c' ;
+        settings = 'Stage_4bNoAtten' ;
   
 end 
     
