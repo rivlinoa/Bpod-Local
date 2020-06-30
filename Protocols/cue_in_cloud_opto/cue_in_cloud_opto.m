@@ -7,22 +7,24 @@ function cue_in_cloud_opto
     % settings:
     global BpodSystem
     S = BpodSystem.ProtocolSettings; 
-    if isempty(fieldnames(S))                   % If settings file was an empty struct, populate struct with default settings
-            S.GUI.RewardAmount = 25;            % ul
-            S.GUI.ResponseDuration = 1;         % sec
-            S.GUI.MaxDelay = 2;                 % sec
-            S.GUI.MinDelay = 0.5;               % sec
-            S.GUI.AudVis = 0.1;                 % Between 0-1, fraction of trials that would have auditory+visual stimulus.  
-            S.GUI.AudVisCloud = 0.1;            % Between 0-1, auditory+visual stimulus with cloud. 
-            S.GUI.Aud = 0.4;                    % Between 0-1, auditory stimulus.
-            S.GUI.AudCloud = 0.4;               % Between 0-1, auditory stimulus with cloud.
-            S.GUI.laser = 0.3;                  % Between 0-1, fraction of trials with stimulation ( only from aud + aud cloud ) .
+    if isempty(fieldnames(S))               % If settings file was an empty struct, populate struct with default settings
+            S.RewardAmount = 25;            % ul
+            S.ResponseDuration = 1;         % sec
+            S.MaxDelay = 2;                 % sec
+            S.MinDelay = 0.5;               % sec
+            S.AudVis = 0.1;                 % Between 0-1, fraction of trials that would have auditory+visual stimulus.  
+            S.AudVisCloud = 0.1;            % Between 0-1, auditory+visual stimulus with cloud. 
+            S.Aud = 0.4;                    % Between 0-1, auditory stimulus.
+            S.AudCloud = 0.4;               % Between 0-1, auditory stimulus with cloud.
+            S.laser = 0.3;                  % Between 0-1, fraction of trials with stimulation ( only from aud + aud cloud ) .
     end
-   
-    BpodSystem.SoftCodeHandlerFunction = 'SoftCodeHandler_Printout';
+    if isfield(S, 'GUI')
+        S = S.GUI;
+    end
+    % BpodSystem.SoftCodeHandlerFunction = 'SoftCodeHandler_Printout';
     
     % initiations :
-    RFID2 = serial('COM17');
+    RFID2 = serial('COM15');
     
     %% load the wave player 
     if (isfield(BpodSystem.ModuleUSB, 'WavePlayer1'))
@@ -67,7 +69,7 @@ function cue_in_cloud_opto
     BpodSystem.Data.cloud = filtered_cloud;
     BpodSystem.Data.cue = cue;
     BpodSystem.Data.stimulation = stimulation;
-    BpodSystem.Path.DataFolder  = '\\132.64.104.28\citri-lab\noa.rivlin\bpod_results\test';
+    % BpodSystem.Path.DataFolder  = '\\132.64.104.28\citri-lab\noa.rivlin\bpod_results\test';
     
     %% initiate figures
     BpodSystem.GUIData.bar = struct;
@@ -94,16 +96,12 @@ function cue_in_cloud_opto
   %% The main loop   
     n_trials = 1000;
     T = TrialManagerObject;
-    BpodSystem.Data = struct;
     p = struct;
     
     for i = 1:n_trials
             tmp = p;
             % define parameters for the coming trial: 
             p = define_trial(S);  
-            p.delay = S.GUI.MinDelay + rand(1) * (S.GUI.MaxDelay - S.GUI.MinDelay);
-            p.response = S.GUI.ResponseDuration;  
-            R = GetValveTimes(S.GUI.RewardAmount, 1 ); p.ValveTime = R;
             sma = prepare_sma(p);                                          % Prepare next trial's state machine   
             if i>1; RawEvents = T.getTrialData;  end                       % Hangs here until trial end, then returns the trial's raw data
             if BpodSystem.Status.BeingUsed == 0; return; end               % If user hit console "stop" button, end session 
@@ -116,6 +114,7 @@ function cue_in_cloud_opto
                 if (length(tag)==12) 
                      fclose(RFID2);
                      disp (tag)
+                     p.RFID = tag;
                      SendBpodSoftCode(1)
                      break 
                 end 
@@ -123,7 +122,6 @@ function cue_in_cloud_opto
             end 
             
             if i > 1
-                
                 BpodSystem.Data = AddTrialEvents(BpodSystem.Data,RawEvents); % Computes trial events from raw data
                                 
                 if tmp.laser
@@ -147,12 +145,12 @@ function cue_in_cloud_opto
                 
                 BpodSystem.Data.Delay{i-1} = tmp.delay;
                 BpodSystem.Data.attencloud{i-1} = tmp.attencloud;
-                BpodSystem.Data.CueTypes{i-1} = p.Cuetype;
-                BpodSystem.Data.ResponseDuration(i-1) = p.response;
-                BpodSystem.Data.Laser(i-1) = p.laser;
-                BpodSystem.Data.RFID{i-1} = tag;
+                BpodSystem.Data.CueTypes{i-1} = tmp.Cuetype;
+                BpodSystem.Data.ResponseDuration(i-1) = tmp.response;
+                BpodSystem.Data.Laser(i-1) = tmp.laser;
+                BpodSystem.Data.RFID{i-1} = tmp.RFID;
                 if ~ isnan(BpodSystem.Data.RawEvents.Trial{1, 1}.States.Reward(1))
-                    BpodSystem.Data.reward_supplied(i-1) = S.GUI.RewardAmount;
+                    BpodSystem.Data.reward_supplied(i-1) = S.RewardAmount;
                 else
                     BpodSystem.Data.reward_supplied(i-1) = 0;
                 end
@@ -164,8 +162,6 @@ function cue_in_cloud_opto
 end 
 
 
-
-
 function p = define_trial(S) 
             
     % function DEFINE_TRIAL defins the trial parameters - what is the stimulus 
@@ -174,23 +170,23 @@ function p = define_trial(S)
     current_trial = rand(1);
     is_laser = rand(1);
 
-    if current_trial < S.GUI.AudVis
+    if current_trial < S.AudVis
                 p.Cuetype = 'AudVis';
                 p.CueAction = {'WavePlayer1', 1 ,'PWM2', 255 };
                 p.attencloud = 0; 
                 p.CloudLaserAction = {}; 
                 p.laser = 0;
-      elseif current_trial < (S.GUI.AudVis + S.GUI.AudVisCloud)
-                p.Cuetype = 'AudVis';
+      elseif current_trial < (S.AudVis + S.AudVisCloud)
+                p.Cuetype = 'AudVisCloud';
                 p.CueAction = {'WavePlayer1', 1 ,'PWM2', 255 };
                 p.attencloud = 1; 
                 p.CloudLaserAction = {'WavePlayer1', 2};
                 p.laser = 0;
-      elseif current_trial < (S.GUI.AudVis + S.GUI.AudVisCloud + S.GUI.Aud)
+      elseif current_trial < (S.AudVis + S.AudVisCloud + S.Aud)
                 p.Cuetype = 'Aud';
                 p.CueAction = {'WavePlayer1', 1 };
                 p.attencloud = 0; 
-                if is_laser < S.GUI.laser
+                if is_laser < S.laser
                     p.CloudLaserAction = {'WavePlayer1', 3};
                     p.laser = 1;
                 else
@@ -198,10 +194,10 @@ function p = define_trial(S)
                      p.laser = 0;
                 end
       else  % audcloud 
-                p.Cuetype = 'Aud';
+                p.Cuetype = 'AudCloud';
                 p.CueAction = {'WavePlayer1', 1 };
                 p.attencloud = 1; 
-                if is_laser < S.GUI.laser
+                if is_laser < S.laser
                     p.CloudLaserAction = {'WavePlayer1', 4};
                     p.laser = 1;
                 else
@@ -209,6 +205,9 @@ function p = define_trial(S)
                      p.laser = 0;
                 end
     end 
+    p.delay = S.MinDelay + rand(1) * (S.MaxDelay - S.MinDelay);
+    p.response = S.ResponseDuration;  
+    R = GetValveTimes(S.RewardAmount, 1 ); p.ValveTime = R;
 end 
 
 
