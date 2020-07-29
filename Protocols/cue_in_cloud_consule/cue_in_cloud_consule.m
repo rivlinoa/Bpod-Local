@@ -89,7 +89,7 @@ try
     BpodSystem.Data.cloud = filtered_cloud;
     BpodSystem.Data.cue = cue;
     BpodSystem.Data.TESTER_RFID = '00782B1799DD';
-    BpodSystem.Path.DataFolder  = '\\132.64.104.28\citri-lab\noa.rivlin\bpod_results\test';
+    % BpodSystem.Path.DataFolder  = '\\132.64.104.28\citri-lab\noa.rivlin\bpod_results\test';
     
     %% initiate figures
     BpodSystem.GUIData.bar = struct;
@@ -170,6 +170,7 @@ try
                 BpodSystem.Data.reward_supplied(i-1) = reward;
                 BpodSystem.Data.Delay{i-1} = tmp.delay;
                 BpodSystem.Data.attencloud{i-1} = tmp.attencloud;
+                BpodSystem.Data.cue_atten{i-1} = tmp.cue_atten;
                 BpodSystem.Data.CueTypes{i-1} = tmp.Cuetype;
                 BpodSystem.Data.ResponseDuration(i-1) = tmp.response;
                 BpodSystem.Data.RFID{i-1} = tmp.RFID;
@@ -199,7 +200,8 @@ function p = define_trial(S)
     else
         p.cue_atten = randi(4);
     end
-        
+    
+    current_trial = rand(1);
     if current_trial < S.AudVis
                 p.Cuetype = 'AudVis';
                 p.CueAction = {'WavePlayer1', p.cue_atten ,'PWM1', 255 };
